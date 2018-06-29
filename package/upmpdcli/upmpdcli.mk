@@ -4,27 +4,15 @@
 #
 ################################################################################
 
-UPMPDCLI_VERSION = 0.11.0
+UPMPDCLI_VERSION = 1.2.15
 UPMPDCLI_SITE = http://www.lesbonscomptes.com/upmpdcli/downloads
-UPMPDCLI_LICENSE = GPLv2+
+UPMPDCLI_LICENSE = GPL-2.0+
 UPMPDCLI_LICENSE_FILES = COPYING
-UPMPDCLI_DEPENDENCIES = libmpdclient libupnpp
-
-ifeq ($(BR2_STATIC_LIBS),y)
-# Upmpdcli forgets to take the dependencies of libupnpp into
-# consideration, breaking static linking, so help it.
-# Libupnpp unfortunately doesn't provide a .pc file, so manually
-# handle the dependencies here.
-# The build system doesn't expand LIBS from the configure step, so
-# manually pass it to make.
-UPMPDCLI_DEPENDENCIES += host-pkgconf
-UPMPDCLI_MAKE_OPTS = \
-	LIBS="`$(PKG_CONFIG_HOST_BINARY) --libs expat libcurl libupnp`"
-endif
+UPMPDCLI_DEPENDENCIES = host-pkgconf libmpdclient libupnpp libmicrohttpd jsoncpp
 
 # Upmpdcli only runs if user upmpdcli exists
 define UPMPDCLI_USERS
-	upmpdcli -1 upmpdcli -1 * - - - Upmpdcli MPD UPnP Renderer Front-End
+	upmpdcli -1 upmpdcli -1 * - - audio Upmpdcli MPD UPnP Renderer Front-End
 endef
 
 define UPMPDCLI_INSTALL_INIT_SYSV
@@ -40,7 +28,7 @@ define UPMPDCLI_INSTALL_INIT_SYSTEMD
 endef
 
 define UPMPDCLI_INSTALL_CONF_FILE
-	$(INSTALL) -D -m 0755 $(@D)/src/upmpdcli.conf $(TARGET_DIR)/etc/upmpdcli.conf
+	$(INSTALL) -D -m 0755 $(@D)/src/upmpdcli.conf-dist $(TARGET_DIR)/etc/upmpdcli.conf
 endef
 
 UPMPDCLI_POST_INSTALL_TARGET_HOOKS += UPMPDCLI_INSTALL_CONF_FILE

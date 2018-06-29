@@ -4,28 +4,35 @@
 #
 ################################################################################
 
-CLAMAV_VERSION = 0.98.7
-CLAMAV_SITE = http://sourceforge.net/projects/clamav/files/clamav/$(CLAMAV_VERSION)
-CLAMAV_LICENSE = GPLv2
+CLAMAV_VERSION = 0.99.4
+CLAMAV_SITE = https://www.clamav.net/downloads/production
+CLAMAV_LICENSE = GPL-2.0
 CLAMAV_LICENSE_FILES = COPYING COPYING.bzip2 COPYING.file COPYING.getopt \
-	COPYING.LGPL COPYING.llvm COPYING.lzma COPYING.regex COPYING.sha256 \
+	COPYING.LGPL COPYING.llvm COPYING.lzma COPYING.pcre COPYING.regex \
 	COPYING.unrar COPYING.zlib
-# clamav-0002-static-linking.patch touches configure.ac
-CLAMAV_AUTORECONF = YES
-CLAMAV_DEPENDENCIES = openssl zlib $(if $(BR2_NEEDS_GETTEXT_IF_LOCALE),gettext)
+CLAMAV_DEPENDENCIES = \
+	host-pkgconf \
+	libtool \
+	openssl \
+	zlib \
+	$(TARGET_NLS_DEPENDENCIES)
 
 # mmap cannot be detected when cross-compiling, needed for mempool support
 CLAMAV_CONF_ENV = \
 	ac_cv_c_mmap_private=yes \
 	have_cv_ipv6=yes
 
+# UCLIBC_HAS_FTS is disabled, therefore disable fanotify (missing fts.h)
 CLAMAV_CONF_OPTS = \
 	--with-dbdir=/var/lib/clamav \
+	--with-ltdl-include=$(STAGING_DIR)/usr/include \
+	--with-ltdl-lib=$(STAGING_DIR)/usr/lib \
 	--with-openssl=$(STAGING_DIR)/usr \
 	--with-zlib=$(STAGING_DIR)/usr \
+	--disable-zlib-vcheck \
 	--disable-rpath \
-	--disable-clamuko \
 	--disable-clamav \
+	--disable-fanotify \
 	--disable-milter \
 	--disable-llvm \
 	--disable-clamdtop \
@@ -39,6 +46,13 @@ CLAMAV_CONF_ENV += \
 	ac_cv_libbz2_ltlibs=-lbz2
 else
 CLAMAV_CONF_OPTS += --disable-bzip2
+endif
+
+ifeq ($(BR2_PACKAGE_JSON_C),y)
+CLAMAV_CONF_OPTS += --with-libjson=$(STAGING_DIR)/usr
+CLAMAV_DEPENDENCIES += json-c
+else
+CLAMAV_CONF_OPTS += --without-libjson
 endif
 
 ifeq ($(BR2_PACKAGE_LIBXML2),y)
@@ -60,6 +74,13 @@ CLAMAV_CONF_OPTS += --with-iconv
 CLAMAV_DEPENDENCIES += libiconv
 else
 CLAMAV_CONF_OPTS += --without-iconv
+endif
+
+ifeq ($(BR2_PACKAGE_PCRE),y)
+CLAMAV_CONF_OPTS += --with-pcre=$(STAGING_DIR)/usr
+CLAMAV_DEPENDENCIES += pcre
+else
+CLAMAV_CONF_OPTS += --without-pcre
 endif
 
 $(eval $(autotools-package))

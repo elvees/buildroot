@@ -39,8 +39,8 @@ ROOTFS_JFFS2_DEPENDENCIES = host-mtd
 
 ifneq ($(BR2_TARGET_ROOTFS_JFFS2_SUMMARY),)
 define ROOTFS_JFFS2_CMD
-	$(MKFS_JFFS2) $(JFFS2_OPTS) -d $(TARGET_DIR) -o $@.nosummary && \
-	$(SUMTOOL) $(SUMTOOL_OPTS) -i $@.nosummary -o $@ && \
+	$(MKFS_JFFS2) $(JFFS2_OPTS) -d $(TARGET_DIR) -o $@.nosummary
+	$(SUMTOOL) $(SUMTOOL_OPTS) -i $@.nosummary -o $@
 	rm $@.nosummary
 endef
 else
@@ -49,4 +49,4 @@ define ROOTFS_JFFS2_CMD
 endef
 endif
 
-$(eval $(call ROOTFS_TARGET,jffs2))
+$(eval $(rootfs))

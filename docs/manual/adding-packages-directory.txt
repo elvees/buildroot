@@ -7,7 +7,7 @@ First of all, create a directory under the +package+ directory for
 your software, for example +libfoo+.
 
 Some packages have been grouped by topic in a sub-directory:
-+x11r7+, +efl+ and +matchbox+. If your package fits in
++x11r7+, +qt5+ and +gstreamer+. If your package fits in
 one of these categories, then create your package directory in these.
 New subdirectories are discouraged, however.
 
@@ -28,7 +28,8 @@ contain:
 config BR2_PACKAGE_LIBFOO
 	bool "libfoo"
 	help
-	  This is a comment that explains what libfoo is.
+	  This is a comment that explains what libfoo is. The help text
+	  should be wrapped.
 
 	  http://foosoftware.org/libfoo/
 ---------------------------
@@ -36,15 +37,24 @@ config BR2_PACKAGE_LIBFOO
 The +bool+ line, +help+ line and other metadata information about the
 configuration option must be indented with one tab. The help text
 itself should be indented with one tab and two spaces, lines should
-not be longer than 72 columns, and it must mention the upstream URL
-of the project.
+be wrapped to fit 72 columns, where tab counts for 8, so 62 characters
+in the text itself. The help text must mention the upstream URL of the
+project after an empty line.
 
-You can add other sub-options into a +if
-BR2_PACKAGE_LIBFOO...endif+ statement to configure particular things
-in your software. You can look at examples in other packages. The
-syntax of the +Config.in+ file is the same as the one for the kernel
-Kconfig file. The documentation for this syntax is available at
-http://kernel.org/doc/Documentation/kbuild/kconfig-language.txt[]
+As a convention specific to Buildroot, the ordering of the attributes
+is as follows:
+
+1. The type of option: +bool+, +string+... with the prompt
+2. If needed, the +default+ value(s)
+3. Any dependency of the +depends on+ form
+4. Any dependency of the +select+ form
+5. The help keyword and help text.
+
+You can add other sub-options into a +if BR2_PACKAGE_LIBFOO...endif+
+statement to configure particular things in your software. You can look at
+examples in other packages. The syntax of the +Config.in+ file is the same
+as the one for the kernel Kconfig file. The documentation for this syntax is
+available at http://kernel.org/doc/Documentation/kbuild/kconfig-language.txt[]
 
 Finally you have to add your new +libfoo/Config.in+ to
 +package/Config.in+ (or in a category subdirectory if you decided to
@@ -266,9 +276,18 @@ use in the comment.
 ** Dependency symbol: +BR2_USE_MMU+
 ** Comment string: no comment to be added
 
-* Atomic instructions (whereby the architecture has instructions to
-  perform some operations atomically, like LOCKCMPXCHG on x86)
-** Dependency symbol: +BR2_ARCH_HAS_ATOMICS+
+* Gcc +__sync_*+ built-ins used for atomic operations. They are
+  available in variants operating on 1 byte, 2 bytes, 4 bytes and 8
+  bytes. Since different architectures support atomic operations on
+  different sizes, one dependency symbol is available for each size:
+** Dependency symbol: +BR2_TOOLCHAIN_HAS_SYNC_1+ for 1 byte,
+   +BR2_TOOLCHAIN_HAS_SYNC_2+ for 2 bytes,
+   +BR2_TOOLCHAIN_HAS_SYNC_4+ for 4 bytes, +BR2_TOOLCHAIN_HAS_SYNC_8+
+   for 8 bytes.
+** Comment string: no comment to be added
+
+* Gcc +__atomic_*+ built-ins used for atomic operations.
+** Dependency symbol: +BR2_TOOLCHAIN_HAS_ATOMIC+.
 ** Comment string: no comment to be added
 
 * Kernel headers
@@ -283,16 +302,27 @@ use in the comment.
 ** Comment string: +gcc >= X.Y+ and/or `gcc <= X.Y` (replace
    +X.Y+ with the proper version)
 
+* Host GCC version
+** Dependency symbol: +BR2_HOST_GCC_AT_LEAST_X_Y+, (replace
+   +X_Y+ with the proper version, see +Config.in+)
+** Comment string: no comment to be added
+** Note that it is usually not the package itself that has a minimum
+   host GCC version, but rather a host-package on which it depends.
+
 * C library
 ** Dependency symbol: +BR2_TOOLCHAIN_USES_GLIBC+,
    +BR2_TOOLCHAIN_USES_MUSL+, +BR2_TOOLCHAIN_USES_UCLIBC+
 ** Comment string: for the C library, a slightly different comment text
-   is used: +foo needs an (e)glibc toolchain+, or `foo needs an (e)glibc
+   is used: +foo needs a glibc toolchain+, or `foo needs a glibc
    toolchain w/ C++`
 
 * C++ support
 ** Dependency symbol: +BR2_INSTALL_LIBSTDCPP+
 ** Comment string: `C++`
+
+* Fortran support
+** Dependency symbol: +BR2_TOOLCHAIN_HAS_FORTRAN+
+** Comment string: `fortran`
 
 * thread support
 ** Dependency symbol: +BR2_TOOLCHAIN_HAS_THREADS+
@@ -356,9 +386,6 @@ openGL libraries.
 
 See xref:virtual-package-tutorial[] for more on the virtual packages.
 
-See xref:virtual-package-list[] for the symbols to depend on if your package
-depends on a feature provided by a virtual package.
-
 === The +.mk+ file
 
 [[adding-packages-mk]]
@@ -412,11 +439,13 @@ rules].
 [[adding-packages-hash]]
 === The +.hash+ file
 
-Optionally, you can add a third file, named +libfoo.hash+, that contains
-the hashes of the downloaded files for the +libfoo+ package.
+When possible, you must add a third file, named +libfoo.hash+, that
+contains the hashes of the downloaded files for the +libfoo+
+package. The only reason for not adding a +.hash+ file is when hash
+checking is not possible due to how the package is downloaded.
 
 The hashes stored in that file are used to validate the integrity of the
-downloaded files.
+downloaded files and of the license files.
 
 The format of this file is one line for each file for which to check the
 hash, each line being space-separated, with these three fields:
@@ -431,7 +460,10 @@ hash, each line being space-separated, with these three fields:
 ** for +sha256+, 64 hexadecimal characters
 ** for +sha384+, 96 hexadecimal characters
 ** for +sha512+, 128 hexadecimal characters
-* the name of the file, without any directory component
+* the name of the file:
+** for a source archive: the basename of the file, without any directory
+   component,
+** for a license file: the path as it appears in +FOO_LICENSE_FILES+.
 
 Lines starting with a +#+ sign are considered comments, and ignored. Empty
 lines are ignored.
@@ -449,19 +481,18 @@ strong hash yourself (preferably +sha256+, but not +md5+), and mention
 this in a comment line above the hashes.
 
 .Note
-If +libfoo+ is from GitHub (see xref:github-download-url[] for details), we
-can only accept a +.hash+ file if the package is a released (e.g. uploaded
-by the maintainer) tarball. Otherwise, the automatically generated tarball
-may change over time, and thus its hashes may be different each time it is
-downloaded, causing a +.hash+ mismatch for that tarball.
+The hashes for license files are used to detect a license change when a
+package version is bumped. The hashes are checked during the make legal-info
+target run. For a package with multiple versions (like Qt5),
+create the hash file in a subdirectory +<packageversion>+ of that package
+(see also xref:patch-apply-order[]).
 
 .Note
 The number of spaces does not matter, so one can use spaces (or tabs) to
 properly align the different fields.
 
 The +none+ hash type is reserved to those archives downloaded from a
-repository, like a 'git clone', a 'subversion checkout'... or archives
-downloaded with the xref:github-download-url[github helper].
+repository, like a 'git clone', a 'subversion checkout'...
 
 The example below defines a +sha1+ and a +sha256+ published by upstream for
 the main +libfoo-1.2.3.tar.bz2+ tarball, an +md5+ from upstream and a
@@ -480,8 +511,12 @@ sha256 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b libfoo-d
 # Locally computed:
 sha256 ff52101fb90bbfc3fe9475e425688c660f46216d7e751c4bbdb1dc85cdccacb9 libfoo-fix-blabla.patch
 
-# No hash for 1234, comes from the github-helper:
+# No hash for 1234:
 none   xxx                                                              libfoo-1234.tar.gz
+
+# Hash for license files:
+sha256 a45a845012742796534f7e91fe623262ccfb99460a2bd04015bd28d66fba95b8  COPYING
+sha256 01b1f9f2c8ee648a7a596a1abe8aa4ed7899b1c9e5551bda06da6e422b04aa55  doc/COPYING.LGPL
 ----
 
 If the +.hash+ file is present, and it contains one or more hashes for a
@@ -496,10 +531,17 @@ the downloaded file is left in the download directory since this
 typically indicates that the +.hash+ file is wrong but the downloaded
 file is probably OK.
 
-Sources that are downloaded from a version control system (git, subversion,
-etc...) can not have a hash, because the version control system and tar
-may not create exactly the same file (dates, files ordering...), so the
-hash could be wrong even for a valid download. Therefore, the hash check
-is entirely skipped for such sources.
+Hashes are currently checked for files fetched from http/ftp servers,
+Git repositories, files copied using scp and local files. Hashes are
+not checked for other version control systems (such as Subversion,
+CVS, etc.) because Buildroot currently does not generate reproducible
+tarballs when source code is fetched from such version control
+systems.
+
+Hashes should only be added in +.hash+ files for files that are
+guaranteed to be stable. For example, patches auto-generated by Github
+are not guaranteed to be stable, and therefore their hashes can change
+over time. Such patches should not be downloaded, and instead be added
+locally to the package folder.
 
 If the +.hash+ file is missing, then no check is done at all.

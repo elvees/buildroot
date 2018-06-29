@@ -4,10 +4,9 @@
 #
 ################################################################################
 
-PROFTPD_VERSION = 1.3.4d
-PROFTPD_SOURCE = proftpd-$(PROFTPD_VERSION).tar.gz
+PROFTPD_VERSION = 1.3.6
 PROFTPD_SITE = ftp://ftp.proftpd.org/distrib/source
-PROFTPD_LICENSE = GPLv2+
+PROFTPD_LICENSE = GPL-2.0+
 PROFTPD_LICENSE_FILES = COPYING
 
 PROFTPD_CONF_ENV = \
@@ -26,6 +25,13 @@ PROFTPD_CONF_OPTS = \
 
 ifeq ($(BR2_PACKAGE_PROFTPD_MOD_REWRITE),y)
 PROFTPD_CONF_OPTS += --with-modules=mod_rewrite
+endif
+
+ifeq ($(BR2_PACKAGE_PROFTPD_MOD_REDIS),y)
+PROFTPD_CONF_OPTS += --enable-redis
+PROFTPD_DEPENDENCIES += hiredis
+else
+PROFTPD_CONF_OPTS += --disable-redis
 endif
 
 # configure script doesn't handle detection of %llu format string
@@ -49,6 +55,10 @@ PROFTPD_MAKE = $(MAKE1)
 define PROFTPD_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/proftpd $(TARGET_DIR)/usr/sbin/proftpd
 	$(INSTALL) -m 0644 -D $(@D)/sample-configurations/basic.conf $(TARGET_DIR)/etc/proftpd.conf
+endef
+
+define PROFTPD_USERS
+	ftp -1 ftp -1 * /home/ftp - - Anonymous FTP User
 endef
 
 define PROFTPD_INSTALL_INIT_SYSV

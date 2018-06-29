@@ -68,25 +68,19 @@ export BR_NO_CHECK_HASH_FOR =
 # ssh authentication. DOWNLOAD_WGET is the normal wget-based download
 # mechanism.
 #
-# The SOURCE_CHECK_* helpers are in charge of simply checking that the source
-# is available for download. This can be used to make sure one will be able
-# to get all the sources needed for one's build configuration.
 ################################################################################
 
 define DOWNLOAD_GIT
 	$(EXTRA_ENV) $(DL_WRAPPER) -b git \
 		-o $(DL_DIR)/$($(PKG)_SOURCE) \
+		$(if $($(PKG)_GIT_SUBMODULES),-r) \
+		-H $(PKGDIR)/$($(PKG)_RAWNAME).hash \
 		$(QUIET) \
 		-- \
 		$($(PKG)_SITE) \
 		$($(PKG)_DL_VERSION) \
-		$($(PKG)_BASE_NAME)
-endef
-
-# TODO: improve to check that the given PKG_DL_VERSION exists on the remote
-# repository
-define SOURCE_CHECK_GIT
-	$(GIT) ls-remote --heads $($(PKG)_SITE) > /dev/null
+		$($(PKG)_RAW_BASE_NAME) \
+		$($(PKG)_DL_OPTS)
 endef
 
 define DOWNLOAD_BZR
@@ -96,11 +90,8 @@ define DOWNLOAD_BZR
 		-- \
 		$($(PKG)_SITE) \
 		$($(PKG)_DL_VERSION) \
-		$($(PKG)_BASE_NAME)
-endef
-
-define SOURCE_CHECK_BZR
-	$(BZR) ls --quiet $($(PKG)_SITE) > /dev/null
+		$($(PKG)_RAW_BASE_NAME) \
+		$($(PKG)_DL_OPTS)
 endef
 
 define DOWNLOAD_CVS
@@ -111,12 +102,8 @@ define DOWNLOAD_CVS
 		$(call stripurischeme,$(call qstrip,$($(PKG)_SITE))) \
 		$($(PKG)_DL_VERSION) \
 		$($(PKG)_RAWNAME) \
-		$($(PKG)_BASE_NAME)
-endef
-
-# Not all CVS servers support ls/rls, use login to see if we can connect
-define SOURCE_CHECK_CVS
-	$(CVS) -d:pserver:anonymous:@$(call stripurischeme,$(call qstrip,$($(PKG)_SITE))) login
+		$($(PKG)_RAW_BASE_NAME) \
+		$($(PKG)_DL_OPTS)
 endef
 
 define DOWNLOAD_SVN
@@ -126,11 +113,8 @@ define DOWNLOAD_SVN
 		-- \
 		$($(PKG)_SITE) \
 		$($(PKG)_DL_VERSION) \
-		$($(PKG)_BASE_NAME)
-endef
-
-define SOURCE_CHECK_SVN
-	$(SVN) ls $($(PKG)_SITE)@$($(PKG)_DL_VERSION) > /dev/null
+		$($(PKG)_RAW_BASE_NAME) \
+		$($(PKG)_DL_OPTS)
 endef
 
 # SCP URIs should be of the form scp://[user@]host:filepath
@@ -142,11 +126,8 @@ define DOWNLOAD_SCP
 		-H $(PKGDIR)/$($(PKG)_RAWNAME).hash \
 		$(QUIET) \
 		-- \
-		'$(call stripurischeme,$(call qstrip,$(1)))'
-endef
-
-define SOURCE_CHECK_SCP
-	$(SSH) $(call domain,$(1),:) ls '$(call notdomain,$(1),:)' > /dev/null
+		'$(call stripurischeme,$(call qstrip,$(1)))' \
+		$($(PKG)_DL_OPTS)
 endef
 
 define DOWNLOAD_HG
@@ -156,13 +137,8 @@ define DOWNLOAD_HG
 		-- \
 		$($(PKG)_SITE) \
 		$($(PKG)_DL_VERSION) \
-		$($(PKG)_BASE_NAME)
-endef
-
-# TODO: improve to check that the given PKG_DL_VERSION exists on the remote
-# repository
-define SOURCE_CHECK_HG
-	$(HG) incoming --force -l1 $($(PKG)_SITE) > /dev/null
+		$($(PKG)_RAW_BASE_NAME) \
+		$($(PKG)_DL_OPTS)
 endef
 
 define DOWNLOAD_WGET
@@ -171,11 +147,8 @@ define DOWNLOAD_WGET
 		-H $(PKGDIR)/$($(PKG)_RAWNAME).hash \
 		$(QUIET) \
 		-- \
-		'$(call qstrip,$(1))'
-endef
-
-define SOURCE_CHECK_WGET
-	$(WGET) --spider '$(call qstrip,$(1))'
+		'$(call qstrip,$(1))' \
+		$($(PKG)_DL_OPTS)
 endef
 
 define DOWNLOAD_LOCALFILES
@@ -184,11 +157,8 @@ define DOWNLOAD_LOCALFILES
 		-H $(PKGDIR)/$($(PKG)_RAWNAME).hash \
 		$(QUIET) \
 		-- \
-		$(call stripurischeme,$(call qstrip,$(1)))
-endef
-
-define SOURCE_CHECK_LOCALFILES
-	test -e $(call stripurischeme,$(call qstrip,$(1)))
+		$(call stripurischeme,$(call qstrip,$(1))) \
+		$($(PKG)_DL_OPTS)
 endef
 
 ################################################################################
@@ -201,33 +171,30 @@ endef
 #
 # E.G. use like this:
 # $(call DOWNLOAD,$(FOO_SITE))
+#
+# For PRIMARY and BACKUP site, any ? in the URL is replaced by %3F. A ? in
+# the URL is used to separate query arguments, but the PRIMARY and BACKUP
+# sites serve just plain files.
 ################################################################################
 
 define DOWNLOAD
 	$(call DOWNLOAD_INNER,$(1),$(notdir $(1)),DOWNLOAD)
 endef
 
-define SOURCE_CHECK
-	$(call DOWNLOAD_INNER,$(1),$(notdir $(1)),SOURCE_CHECK)
-endef
-
 define DOWNLOAD_INNER
-	$(Q)if test -n "$(call qstrip,$(BR2_PRIMARY_SITE))" ; then \
+	$(Q)$(if $(filter bzr cvs hg svn,$($(PKG)_SITE_METHOD)),export BR_NO_CHECK_HASH_FOR=$(2);) \
+	if test -n "$(call qstrip,$(BR2_PRIMARY_SITE))" ; then \
 		case "$(call geturischeme,$(BR2_PRIMARY_SITE))" in \
+			file) $(call $(3)_LOCALFILES,$(BR2_PRIMARY_SITE)/$(2),$(2)) && exit ;; \
 			scp) $(call $(3)_SCP,$(BR2_PRIMARY_SITE)/$(2),$(2)) && exit ;; \
-			*) $(call $(3)_WGET,$(BR2_PRIMARY_SITE)/$(2),$(2)) && exit ;; \
+			*) $(call $(3)_WGET,$(BR2_PRIMARY_SITE)/$(subst ?,%3F,$(2)),$(2)) && exit ;; \
 		esac ; \
 	fi ; \
 	if test "$(BR2_PRIMARY_SITE_ONLY)" = "y" ; then \
 		exit 1 ; \
 	fi ; \
 	if test -n "$(1)" ; then \
-		if test -z "$($(PKG)_SITE_METHOD)" ; then \
-			scheme="$(call geturischeme,$(1))" ; \
-		else \
-			scheme="$($(PKG)_SITE_METHOD)" ; \
-		fi ; \
-		case "$$scheme" in \
+		case "$($(PKG)_SITE_METHOD)" in \
 			git) $($(3)_GIT) && exit ;; \
 			svn) $($(3)_SVN) && exit ;; \
 			cvs) $($(3)_CVS) && exit ;; \
@@ -239,7 +206,7 @@ define DOWNLOAD_INNER
 		esac ; \
 	fi ; \
 	if test -n "$(call qstrip,$(BR2_BACKUP_SITE))" ; then \
-		$(call $(3)_WGET,$(BR2_BACKUP_SITE)/$(2),$(2)) && exit ; \
+		$(call $(3)_WGET,$(BR2_BACKUP_SITE)/$(subst ?,%3F,$(2)),$(2)) && exit ; \
 	fi ; \
 	exit 1
 endef

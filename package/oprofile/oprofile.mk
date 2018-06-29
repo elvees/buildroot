@@ -4,9 +4,9 @@
 #
 ################################################################################
 
-OPROFILE_VERSION = 1.0.0
+OPROFILE_VERSION = 1.1.0
 OPROFILE_SITE = http://downloads.sourceforge.net/project/oprofile/oprofile/oprofile-$(OPROFILE_VERSION)
-OPROFILE_LICENSE = GPLv2+
+OPROFILE_LICENSE = GPL-2.0+
 OPROFILE_LICENSE_FILES = COPYING
 OPROFILE_CONF_OPTS = \
 	--disable-account-check \
@@ -17,7 +17,7 @@ OPROFILE_BINARIES = \
 	utils/ophelp pp/opannotate pp/oparchive pp/opgprof \
 	pp/opreport opjitconv/opjitconv \
 	utils/op-check-perfevents libabi/opimport \
-	pe_counting/ocount
+	pe_counting/ocount pe_profiling/operf
 
 ifeq ($(BR2_i386),y)
 OPROFILE_ARCH = i386
@@ -41,11 +41,11 @@ ifeq ($(BR2_PACKAGE_LIBPFM4),y)
 OPROFILE_DEPENDENCIES += libpfm4
 endif
 
-# When getext is enabled, popt links with -lintl, specifies it in its
-# popt.pc and has done so for the past 6+ years. But oprofile does not
-# use pkconfig to find popt, so misses -lintl, which is important for
-# a static build. We have to do the call to pkgconfig manually...
-OPROFILE_CONF_ENV += LIBS="`$(PKG_CONFIG_HOST_BINARY) --libs popt`"
+ifeq ($(BR2_STATIC_LIBS),)
+define OPROFILE_INSTALL_SHARED_LIBRARY
+	$(INSTALL) -m 755 $(@D)/libopagent/.libs/*.so* $(TARGET_DIR)/usr/lib/oprofile
+endef
+endif
 
 define OPROFILE_INSTALL_TARGET_CMDS
 	$(INSTALL) -d -m 755 $(TARGET_DIR)/usr/bin
@@ -57,7 +57,7 @@ define OPROFILE_INSTALL_TARGET_CMDS
 	fi
 	$(INSTALL) -m 644 $(@D)/libregex/stl.pat $(TARGET_DIR)/usr/share/oprofile
 	$(INSTALL) -m 755 $(addprefix $(@D)/, $(OPROFILE_BINARIES)) $(TARGET_DIR)/usr/bin
-	$(INSTALL) -m 755 $(@D)/libopagent/.libs/*.so* $(TARGET_DIR)/usr/lib/oprofile
+	$(OPROFILE_INSTALL_SHARED_LIBRARY)
 endef
 
 $(eval $(autotools-package))

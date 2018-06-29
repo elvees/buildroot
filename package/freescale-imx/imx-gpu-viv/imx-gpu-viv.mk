@@ -4,34 +4,30 @@
 #
 ################################################################################
 
-IMX_GPU_VIV_BASE_VERSION = 5.0.11.p4.1
-ifeq ($(BR2_ARM_EABIHF),y)
-IMX_GPU_VIV_VERSION = $(IMX_GPU_VIV_BASE_VERSION)-hfp
-else
-IMX_GPU_VIV_VERSION = $(IMX_GPU_VIV_BASE_VERSION)-sfp
-endif
+IMX_GPU_VIV_VERSION = 6.2.2.p0-aarch32
 IMX_GPU_VIV_SITE = $(FREESCALE_IMX_SITE)
 IMX_GPU_VIV_SOURCE = imx-gpu-viv-$(IMX_GPU_VIV_VERSION).bin
 
 IMX_GPU_VIV_INSTALL_STAGING = YES
 
-IMX_GPU_VIV_LICENSE = Freescale Semiconductor Software License Agreement
-IMX_GPU_VIV_LICENSE_FILES = EULA
+IMX_GPU_VIV_LICENSE = NXP Semiconductor Software License Agreement
+IMX_GPU_VIV_LICENSE_FILES = EULA COPYING
 IMX_GPU_VIV_REDISTRIBUTE = NO
 
 IMX_GPU_VIV_PROVIDES = libegl libgles libopenvg
 IMX_GPU_VIV_LIB_TARGET = $(call qstrip,$(BR2_PACKAGE_IMX_GPU_VIV_OUTPUT))
 
+ifeq ($(IMX_GPU_VIV_LIB_TARGET),x11)
+# The libGAL.so library provided by imx-gpu-viv uses X functions. Packages
+# may want to link against libGAL.so (QT5 Base with OpenGL and X support
+# does so). For this to work we need build dependencies to libXdamage,
+# libXext and libXfixes so that X functions used in libGAL.so are referenced.
+IMX_GPU_VIV_DEPENDENCIES += xlib_libXdamage xlib_libXext xlib_libXfixes
+endif
+
 define IMX_GPU_VIV_EXTRACT_CMDS
 	$(call FREESCALE_IMX_EXTRACT_HELPER,$(DL_DIR)/$(IMX_GPU_VIV_SOURCE))
 endef
-
-# For some reason libGAL_egl for x11 is called libGAL_egl.dri.so
-ifeq ($(IMX_GPU_VIV_LIB_TARGET),x11)
-define IMX_GPU_VIV_FIXUP_SYMLINKS
-	ln -sf libGAL_egl.dri.so $(@D)/gpu-core/usr/lib/libGAL_egl.so
-endef
-endif
 
 # Instead of building, we fix up the inconsistencies that exist
 # in the upstream archive here.
@@ -47,10 +43,8 @@ define IMX_GPU_VIV_BUILD_CMDS
 	ln -sf libGLESv2-$(IMX_GPU_VIV_LIB_TARGET).so $(@D)/gpu-core/usr/lib/libGLESv2.so
 	ln -sf libGLESv2-$(IMX_GPU_VIV_LIB_TARGET).so $(@D)/gpu-core/usr/lib/libGLESv2.so.2
 	ln -sf libGLESv2-$(IMX_GPU_VIV_LIB_TARGET).so $(@D)/gpu-core/usr/lib/libGLESv2.so.2.0.0
-	ln -sf libVIVANTE-$(IMX_GPU_VIV_LIB_TARGET).so $(@D)/gpu-core/usr/lib/libVIVANTE.so
 	ln -sf libGAL-$(IMX_GPU_VIV_LIB_TARGET).so $(@D)/gpu-core/usr/lib/libGAL.so
-	ln -sf libGAL_egl.$(IMX_GPU_VIV_LIB_TARGET).so $(@D)/gpu-core/usr/lib/libGAL_egl.so
-	$(IMX_GPU_VIV_FIXUP_SYMLINKS)
+	ln -sf libVDK-$(IMX_GPU_VIV_LIB_TARGET).so $(@D)/gpu-core/usr/lib/libVDK.so
 endef
 
 ifeq ($(IMX_GPU_VIV_LIB_TARGET),fb)
@@ -58,14 +52,29 @@ define IMX_GPU_VIV_FIXUP_FB_HEADERS
 	$(SED) '39i\
 		#if !defined(EGL_API_X11) && !defined(EGL_API_DFB) && !defined(EGL_API_FB) \n\
 		#define EGL_API_FB \n\
-		#endif' $(STAGING_DIR)/usr/include/EGL/eglvivante.h
+		#endif' $(STAGING_DIR)/usr/include/EGL/eglplatform.h
+endef
+endif
+
+ifeq ($(IMX_GPU_VIV_LIB_TARGET),fb)
+define IMX_GPU_VIV_FIXUP_PKGCONFIG
+	ln -sf egl_linuxfb.pc $(@D)/gpu-core/usr/lib/pkgconfig/egl.pc
+endef
+endif
+
+ifeq ($(IMX_GPU_VIV_LIB_TARGET),x11)
+define IMX_GPU_VIV_FIXUP_PKGCONFIG
+	for lib in egl gbm glesv1_cm glesv2 vg; do \
+		ln -sf $${lib}_x11.pc $(@D)/gpu-core/usr/lib/pkgconfig/$${lib}.pc
+	done
 endef
 endif
 
 define IMX_GPU_VIV_INSTALL_STAGING_CMDS
 	cp -r $(@D)/gpu-core/usr/* $(STAGING_DIR)/usr
 	$(IMX_GPU_VIV_FIXUP_FB_HEADERS)
-	for lib in egl glesv2 vg; do \
+	$(IMX_GPU_VIV_FIXUP_PKGCONFIG)
+	for lib in egl gbm glesv1_cm glesv2 vg; do \
 		$(INSTALL) -m 0644 -D \
 			$(@D)/gpu-core/usr/lib/pkgconfig/$${lib}.pc \
 			$(STAGING_DIR)/usr/lib/pkgconfig/$${lib}.pc; \
@@ -79,13 +88,20 @@ define IMX_GPU_VIV_INSTALL_EXAMPLES
 endef
 endif
 
+ifeq ($(BR2_PACKAGE_IMX_GPU_VIV_GMEM_INFO),y)
+define IMX_GPU_VIV_INSTALL_GMEM_INFO
+	cp -dpfr $(@D)/gpu-tools/gmem-info/usr/bin/* $(TARGET_DIR)/usr/bin/
+endef
+endif
+
 # On the target, remove the unused libraries.
 # Note that this is _required_, else ldconfig may create symlinks
 # to the wrong library
 define IMX_GPU_VIV_INSTALL_TARGET_CMDS
 	$(IMX_GPU_VIV_INSTALL_EXAMPLES)
+	$(IMX_GPU_VIV_INSTALL_GMEM_INFO)
 	cp -a $(@D)/gpu-core/usr/lib $(TARGET_DIR)/usr
-	for lib in EGL GAL VIVANTE GLESv2; do \
+	for lib in EGL GAL GLESv2 VDK; do \
 		for f in $(TARGET_DIR)/usr/lib/lib$${lib}-*.so; do \
 			case $$f in \
 				*-$(IMX_GPU_VIV_LIB_TARGET).so) : ;; \

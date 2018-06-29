@@ -4,12 +4,12 @@
 #
 ################################################################################
 
-MPG123_VERSION = 1.22.2
+MPG123_VERSION = 1.25.2
 MPG123_SOURCE = mpg123-$(MPG123_VERSION).tar.bz2
 MPG123_SITE = http://downloads.sourceforge.net/project/mpg123/mpg123/$(MPG123_VERSION)
 MPG123_CONF_OPTS = --disable-lfs-alias
 MPG123_INSTALL_STAGING = YES
-MPG123_LICENSE = LGPLv2.1
+MPG123_LICENSE = LGPL-2.1
 MPG123_LICENSE_FILES = COPYING
 MPG123_DEPENDENCIES = host-pkgconf
 
@@ -67,14 +67,18 @@ ifeq ($(BR2_PACKAGE_ALSA_LIB),y)
 MPG123_AUDIO += alsa
 MPG123_CONF_OPTS += --with-default-audio=alsa
 MPG123_DEPENDENCIES += alsa-lib
+# configure script does NOT use pkg-config to figure out how to link
+# with alsa, breaking static linking as alsa uses pthreads
+MPG123_CONF_ENV += LIBS="`$(PKG_CONFIG_HOST_BINARY) --libs alsa`"
 endif
 
 MPG123_CONF_OPTS += --with-audio=$(subst $(space),$(comma),$(MPG123_AUDIO))
 
-ifeq ($(BR2_PACKAGE_LIBTOOL),y)
-MPG123_DEPENDENCIES += libtool
-# .la files gets stripped , so directly load .so files rather than .la
-MPG123_CONF_OPTS += --with-modules --with-module-suffix=.so
+# output modules are loaded with dlopen()
+ifeq ($(BR2_STATIC_LIBS),y)
+MPG123_CONF_OPTS += --disable-modules
+else
+MPG123_CONF_OPTS += --enable-modules
 endif
 
 $(eval $(autotools-package))

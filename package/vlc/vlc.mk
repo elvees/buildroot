@@ -4,16 +4,23 @@
 #
 ################################################################################
 
-VLC_VERSION = 2.2.1
-VLC_SITE = http://get.videolan.org/vlc/$(VLC_VERSION)
+VLC_VERSION = 2.2.8
+VLC_SITE = https://get.videolan.org/vlc/$(VLC_VERSION)
 VLC_SOURCE = vlc-$(VLC_VERSION).tar.xz
-VLC_LICENSE = GPLv2+ LGPLv2.1+
+VLC_LICENSE = GPL-2.0+, LGPL-2.1+
 VLC_LICENSE_FILES = COPYING COPYING.LIB
 VLC_DEPENDENCIES = host-pkgconf
 VLC_AUTORECONF = YES
 
 # Install vlc libraries in staging.
 VLC_INSTALL_STAGING = YES
+
+# gcc bug internal compiler error: in merge_overlapping_regs, at
+# regrename.c:304. This bug is fixed since gcc 6.
+ifeq ($(BR2_microblaze):$(BR2_TOOLCHAIN_GCC_AT_LEAST_6),y:)
+VLC_CONF_ENV += CFLAGS="$(TARGET_CFLAGS) -O0"
+VLC_CONF_OPTS += --disable-optimizations
+endif
 
 # VLC defines two autoconf functions which are also defined by our own pkg.m4
 # from pkgconf. Unfortunately, they are defined in a different way: VLC adds
@@ -54,6 +61,12 @@ VLC_CONF_OPTS += \
 	--disable-mfx \
 	--disable-vdpau \
 	--disable-addonmanagermodules \
+	--enable-run-as-root
+
+# Uses __atomic_fetch_add_4
+ifeq ($(BR2_TOOLCHAIN_HAS_LIBATOMIC),y)
+VLC_CONF_ENV += LIBS="-latomic"
+endif
 
 # Building static and shared doesn't work, so force static off.
 ifeq ($(BR2_STATIC_LIBS),)
@@ -136,10 +149,7 @@ VLC_CONF_OPTS += --disable-flac
 endif
 
 ifeq ($(BR2_PACKAGE_FREERDP),y)
-VLC_CONF_OPTS += --enable-freerdp
 VLC_DEPENDENCIES += freerdp
-else
-VLC_CONF_OPTS += --disable-libfreerdp
 endif
 
 ifeq ($(BR2_PACKAGE_HAS_LIBGL),y)
@@ -178,6 +188,27 @@ else
 VLC_CONF_OPTS += --disable-libass
 endif
 
+ifeq ($(BR2_PACKAGE_LIBBLURAY),y)
+VLC_CONF_OPTS += --enable-bluray
+VLC_DEPENDENCIES += libbluray
+else
+VLC_CONF_OPTS += --disable-bluray
+endif
+
+ifeq ($(BR2_PACKAGE_LIBCDDB),y)
+VLC_CONF_OPTS += --enable-libcddb
+VLC_DEPENDENCIES += libcddb
+else
+VLC_CONF_OPTS += --disable-libcddb
+endif
+
+ifeq ($(BR2_PACKAGE_LIBDVBPSI),y)
+VLC_CONF_OPTS += --enable-dvbpsi
+VLC_DEPENDENCIES += libdvbpsi
+else
+VLC_CONF_OPTS += --disable-dvbpsi
+endif
+
 ifeq ($(BR2_PACKAGE_LIBGCRYPT),y)
 VLC_CONF_OPTS += --enable-libgcrypt
 VLC_DEPENDENCIES += libgcrypt
@@ -192,6 +223,13 @@ VLC_CONF_OPTS += --enable-mad
 VLC_DEPENDENCIES += libmad
 else
 VLC_CONF_OPTS += --disable-mad
+endif
+
+ifeq ($(BR2_PACKAGE_LIBMATROSKA),y)
+VLC_CONF_OPTS += --enable-mkv
+VLC_DEPENDENCIES += libmatroska
+else
+VLC_CONF_OPTS += --disable-mkv
 endif
 
 ifeq ($(BR2_PACKAGE_LIBMODPLUG),y)
@@ -222,6 +260,13 @@ else
 VLC_CONF_OPTS += --disable-svg --disable-svgdec
 endif
 
+ifeq ($(BR2_PACKAGE_LIBSSH2),y)
+VLC_CONF_OPTS += --enable-sftp
+VLC_DEPENDENCIES += libssh2
+else
+VLC_CONF_OPTS += --disable-sftp
+endif
+
 ifeq ($(BR2_PACKAGE_LIBSIDPLAY2),y)
 VLC_CONF_OPTS += --enable-sid
 VLC_DEPENDENCIES += libsidplay2
@@ -236,11 +281,18 @@ else
 VLC_CONF_OPTS += --disable-theora
 endif
 
-ifeq ($(BR2_PACKAGE_LIBUPNP),y)
+ifeq ($(BR2_PACKAGE_LIBUPNP)$(BR2_PACKAGE_LIBUPNP18),y)
 VLC_CONF_OPTS += --enable-upnp
-VLC_DEPENDENCIES += libupnp
+VLC_DEPENDENCIES += $(if $(BR2_PACKAGE_LIBUPNP),libupnp,libupnp18)
 else
 VLC_CONF_OPTS += --disable-upnp
+endif
+
+ifeq ($(BR2_PACKAGE_LIBVNCSERVER),y)
+VLC_CONF_OPTS += --enable-vnc
+VLC_DEPENDENCIES += libvncserver
+else
+VLC_CONF_OPTS += --disable-vnc
 endif
 
 ifeq ($(BR2_PACKAGE_LIBVORBIS),y)
@@ -293,12 +345,23 @@ else
 VLC_CONF_OPTS += --disable-lua
 endif
 
+ifeq ($(BR2_PACKAGE_MINIZIP),y)
+VLC_DEPENDENCIES += minizip
+endif
+
+ifeq ($(BR2_PACKAGE_MUSEPACK),y)
+VLC_CONF_OPTS += --enable-mpc
+VLC_DEPENDENCIES += musepack
+else
+VLC_CONF_OPTS += --disable-mpc
+endif
+
 ifeq ($(BR2_PACKAGE_QT_GUI_MODULE),y)
 VLC_CONF_OPTS += --enable-qt
 VLC_CONF_ENV += \
-	ac_cv_path_MOC=$(HOST_DIR)/usr/bin/moc \
-	ac_cv_path_RCC=$(HOST_DIR)/usr/bin/rcc \
-	ac_cv_path_UIC=$(HOST_DIR)/usr/bin/uic
+	ac_cv_path_MOC=$(HOST_DIR)/bin/moc \
+	ac_cv_path_RCC=$(HOST_DIR)/bin/rcc \
+	ac_cv_path_UIC=$(HOST_DIR)/bin/uic
 VLC_DEPENDENCIES += qt
 else
 VLC_CONF_OPTS += --disable-qt
@@ -325,6 +388,13 @@ else
 VLC_CONF_OPTS += --disable-speex
 endif
 
+ifeq ($(BR2_PACKAGE_TAGLIB),y)
+VLC_CONF_OPTS += --enable-taglib
+VLC_DEPENDENCIES += taglib
+else
+VLC_CONF_OPTS += --disable-taglib
+endif
+
 ifeq ($(BR2_PACKAGE_TREMOR),y)
 VLC_CONF_OPTS += --enable-tremor
 VLC_DEPENDENCIES += tremor
@@ -339,11 +409,22 @@ else
 VLC_CONF_OPTS += --disable-udev
 endif
 
+ifeq ($(BR2_PACKAGE_XCB_UTIL_KEYSYMS),y)
+VLC_CONF_OPTS += --enable-xcb
+VLC_DEPENDENCIES += xcb-util-keysyms
+else
+VLC_CONF_OPTS += --disable-xcb
+endif
+
 ifeq ($(BR2_PACKAGE_XLIB_LIBX11),y)
 VLC_CONF_OPTS += --with-x
 VLC_DEPENDENCIES += xlib_libX11
 else
 VLC_CONF_OPTS += --without-x
+endif
+
+ifeq ($(BR2_PACKAGE_ZLIB),y)
+VLC_DEPENDENCIES += zlib
 endif
 
 $(eval $(autotools-package))

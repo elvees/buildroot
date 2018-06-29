@@ -1,3 +1,4 @@
-# From http://sourceforge.net/projects/xtables-addons/files/Xtables-addons/2.7/
-md5	81bd7ba82e5f7bfd1458fc97ddf72e1d	xtables-addons-2.7.tar.xz
-sha1	82c13237ef2a62e57832b160832f4b9c4fb8c7c5	xtables-addons-2.7.tar.xz
+# From https://sourceforge.net/projects/xtables-addons/files/Xtables-addons/
+sha1	70ace437ec84d9ec1970505cecf270ed0cbd273e	xtables-addons-2.12.tar.xz
+# Calculated based on the hash above
+sha256	c4865aa1c64c5ff173ff7b5d69425466c71f0f9b5eb5299c52c68bdcd46fa63b	xtables-addons-2.12.tar.xz

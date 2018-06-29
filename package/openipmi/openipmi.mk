@@ -4,10 +4,10 @@
 #
 ################################################################################
 
-OPENIPMI_VERSION = 2.0.21
-OPENIPMI_SITE = http://sourceforge.net/projects/openipmi/files/OpenIPMI%202.0%20Library/
-OPENIPMI_SOURCE = OpenIPMI-2.0.21.tar.gz
-OPENIPMI_LICENSE = LGPLv2+, GPLv2+, BSD-3c
+OPENIPMI_VERSION = 2.0.24
+OPENIPMI_SITE = http://sourceforge.net/projects/openipmi/files/OpenIPMI%202.0%20Library
+OPENIPMI_SOURCE = OpenIPMI-$(OPENIPMI_VERSION).tar.gz
+OPENIPMI_LICENSE = LGPL-2.0+, GPL-2.0+, BSD-3-Clause
 OPENIPMI_LICENSE_FILES = COPYING.LIB COPYING COPYING.BSD
 OPENIPMI_DEPENDENCIES = popt ncurses host-pkgconf
 # Patching Makefile.am
@@ -15,11 +15,14 @@ OPENIPMI_AUTORECONF = YES
 OPENIPMI_CONF_ENV = ac_cv_path_pkgprog="$(PKG_CONFIG_HOST_BINARY)"
 OPENIPMI_CONF_OPTS = \
 	--with-glib=no \
-	--with-glib12=no \
 	--with-tcl=no \
 	--with-perl=no \
 	--with-python=no \
 	--with-swig=no
+
+ifeq ($(BR2_PACKAGE_GDBM),y)
+OPENIPMI_DEPENDENCIES += gdbm
+endif
 
 ifeq ($(BR2_PACKAGE_OPENSSL),y)
 OPENIPMI_DEPENDENCIES += openssl

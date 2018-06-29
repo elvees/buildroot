@@ -4,10 +4,10 @@
 #
 ################################################################################
 
-DILLO_VERSION = 3.0.4.1
+DILLO_VERSION = 3.0.5
 DILLO_SOURCE = dillo-$(DILLO_VERSION).tar.bz2
 DILLO_SITE = http://www.dillo.org/download
-DILLO_LICENSE = GPLv3+
+DILLO_LICENSE = GPL-3.0+
 DILLO_LICENSE_FILES = COPYING
 # configure.ac gets patched, so autoreconf is necessary
 DILLO_AUTORECONF = YES
@@ -32,7 +32,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_JPEG),y)
 DILLO_CONF_OPTS += --enable-jpeg
-DILLO_DEPENDENCIES += libjpeg
+DILLO_DEPENDENCIES += jpeg
 else
 DILLO_CONF_OPTS += --disable-jpeg
 endif

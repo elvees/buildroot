@@ -4,15 +4,16 @@
 #
 ################################################################################
 
-GPSD_VERSION = 3.15
+GPSD_VERSION = 3.17
 GPSD_SITE = http://download-mirror.savannah.gnu.org/releases/gpsd
-GPSD_LICENSE = BSD-3c
+GPSD_LICENSE = BSD-3-Clause
 GPSD_LICENSE_FILES = COPYING
 GPSD_INSTALL_STAGING = YES
 
 GPSD_DEPENDENCIES = host-scons host-pkgconf
 
 GPSD_LDFLAGS = $(TARGET_LDFLAGS)
+GPSD_CFLAGS = $(TARGET_CFLAGS)
 
 GPSD_SCONS_ENV = $(TARGET_CONFIGURE_OPTS)
 
@@ -32,9 +33,18 @@ endif
 # Build libgpsmm if we've got C++
 ifeq ($(BR2_INSTALL_LIBSTDCPP),y)
 GPSD_LDFLAGS += -lstdc++
+GPSD_CFLAGS += -std=gnu++98
+GPSD_CXXFLAGS += -std=gnu++98
 GPSD_SCONS_OPTS += libgpsmm=yes
 else
 GPSD_SCONS_OPTS += libgpsmm=no
+endif
+
+# prevents from triggering GCC ICE
+# A bug was reported to the gcc bug tracker:
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68485
+ifeq ($(BR2_microblaze),y)
+GPSD_CFLAGS += -O0
 endif
 
 # Enable or disable Qt binding
@@ -57,6 +67,12 @@ ifeq ($(BR2_PACKAGE_BLUEZ_UTILS),y)
 GPSD_DEPENDENCIES += bluez_utils
 else
 GPSD_SCONS_OPTS += bluez=no
+endif
+
+# If pps-tools is available, build it before so the package can use it
+# (HAVE_SYS_TIMEPPS_H).
+ifeq ($(BR2_PACKAGE_PPS_TOOLS),y)
+GPSD_DEPENDENCIES += pps-tools
 endif
 
 ifeq ($(BR2_PACKAGE_DBUS_GLIB),y)
@@ -95,6 +111,9 @@ endif
 ifneq ($(BR2_PACKAGE_GPSD_GPSCLOCK),y)
 GPSD_SCONS_OPTS += gpsclock=no
 endif
+ifneq ($(BR2_PACKAGE_GPSD_ISYNC),y)
+GPSD_SCONS_OPTS += isync=no
+endif
 ifneq ($(BR2_PACKAGE_GPSD_ITRAX),y)
 GPSD_SCONS_OPTS += itrax=no
 endif
@@ -102,7 +121,7 @@ ifneq ($(BR2_PACKAGE_GPSD_MTK3301),y)
 GPSD_SCONS_OPTS += mtk3301=no
 endif
 ifneq ($(BR2_PACKAGE_GPSD_NMEA),y)
-GPSD_SCONS_OPTS += nmea=no
+GPSD_SCONS_OPTS += nmea0183=no
 endif
 ifneq ($(BR2_PACKAGE_GPSD_NTRIP),y)
 GPSD_SCONS_OPTS += ntrip=no
@@ -185,7 +204,7 @@ ifeq ($(BR2_PACKAGE_GPSD_MAX_DEV),y)
 GPSD_SCONS_OPTS += limited_max_devices=$(BR2_PACKAGE_GPSD_MAX_DEV_VALUE)
 endif
 
-GPSD_SCONS_ENV += LDFLAGS="$(GPSD_LDFLAGS)"
+GPSD_SCONS_ENV += LDFLAGS="$(GPSD_LDFLAGS)" CFLAGS="$(GPSD_CFLAGS)"
 
 define GPSD_BUILD_CMDS
 	(cd $(@D); \
@@ -217,6 +236,8 @@ define GPSD_INSTALL_STAGING_CMDS
 		install)
 endef
 
+# After installing the udev rule, make it writable so that this
+# package can be re-built/re-installed.
 ifeq ($(BR2_PACKAGE_HAS_UDEV),y)
 define GPSD_INSTALL_UDEV_RULES
 	(cd $(@D); \
@@ -225,6 +246,7 @@ define GPSD_INSTALL_UDEV_RULES
 		$(SCONS) \
 		$(GPSD_SCONS_OPTS) \
 		udev-install)
+	chmod u+w $(TARGET_DIR)/lib/udev/rules.d/25-gpsd.rules
 endef
 
 GPSD_POST_INSTALL_TARGET_HOOKS += GPSD_INSTALL_UDEV_RULES

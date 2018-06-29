@@ -11,7 +11,7 @@ ULOGD_CONF_OPTS = --with-dbi=no --with-pgsql=no
 ULOGD_DEPENDENCIES = host-pkgconf \
 	libmnl libnetfilter_acct libnetfilter_conntrack libnetfilter_log \
 	libnfnetlink
-ULOGD_LICENSE = GPLv2
+ULOGD_LICENSE = GPL-2.0
 ULOGD_LICENSE_FILES = COPYING
 
 # DB backends need threads
@@ -27,6 +27,20 @@ ULOGD_DEPENDENCIES += sqlite
 endif
 else
 ULOGD_CONF_OPTS += --with-mysql=no --without-sqlite
+endif
+
+ifeq ($(BR2_PACKAGE_LIBPCAP),y)
+ULOGD_CONF_OPTS += --with-pcap
+ULOGD_DEPENDENCIES += libpcap
+else
+ULOGD_CONF_OPTS += --without-pcap
+endif
+
+ifeq ($(BR2_PACKAGE_JANSSON),y)
+ULOGD_CONF_OPTS += --with-jansson
+ULOGD_DEPENDENCIES += jansson
+else
+ULOGD_CONF_OPTS += --without-jansson
 endif
 
 $(eval $(autotools-package))

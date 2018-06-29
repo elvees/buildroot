@@ -4,20 +4,45 @@
 #
 ################################################################################
 
-MEDIASTREAMER_VERSION = 2.9.0
+MEDIASTREAMER_VERSION = 2.14.0
 MEDIASTREAMER_SITE = http://download.savannah.nongnu.org/releases/linphone/mediastreamer
 MEDIASTREAMER_INSTALL_STAGING = YES
-MEDIASTREAMER_DEPENDENCIES = host-intltool host-pkgconf ortp host-gettext
+# host-vim needed for the xxd utility
+MEDIASTREAMER_DEPENDENCIES = host-intltool host-pkgconf ortp host-gettext host-vim
 # tests fail linking on some architectures, so disable them
 MEDIASTREAMER_CONF_OPTS = --disable-tests --disable-glx --disable-strict
-MEDIASTREAMER_LICENSE = GPLv2+
+MEDIASTREAMER_LICENSE = GPL-2.0+
 MEDIASTREAMER_LICENSE_FILES = COPYING
+
+# patching configure.ac
+MEDIASTREAMER_AUTORECONF = YES
 
 ifeq ($(BR2_PACKAGE_ALSA_LIB_MIXER)$(BR2_PACKAGE_ALSA_LIB_PCM),yy)
 MEDIASTREAMER_CONF_OPTS += --enable-alsa
 MEDIASTREAMER_DEPENDENCIES += alsa-lib
 else
 MEDIASTREAMER_CONF_OPTS += --disable-alsa
+endif
+
+ifeq ($(BR2_PACKAGE_LIBUPNP),y)
+MEDIASTREAMER_CONF_OPTS += --enable-upnp
+MEDIASTREAMER_DEPENDENCIES += libupnp
+else
+MEDIASTREAMER_CONF_OPTS += --disable-upnp
+endif
+
+ifeq ($(BR2_PACKAGE_LIBVPX),y)
+MEDIASTREAMER_CONF_OPTS += --enable-vp8
+MEDIASTREAMER_DEPENDENCIES += libvpx
+else
+MEDIASTREAMER_CONF_OPTS += --disable-vp8
+endif
+
+ifeq ($(BR2_PACKAGE_OPUS),y)
+MEDIASTREAMER_CONF_OPTS += --enable-opus
+MEDIASTREAMER_DEPENDENCIES += opus
+else
+MEDIASTREAMER_CONF_OPTS += --disable-opus
 endif
 
 # portaudio backend needs speex as well

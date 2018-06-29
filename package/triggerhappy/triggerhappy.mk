@@ -4,15 +4,13 @@
 #
 ################################################################################
 
-TRIGGERHAPPY_VERSION = aac9f353a28c0f414b27ac54bbbb2292c152eedc
+TRIGGERHAPPY_VERSION = b822888066129350e51ad79f1cf307fa38dae4f7
 TRIGGERHAPPY_SITE = $(call github,wertarbyte,triggerhappy,$(TRIGGERHAPPY_VERSION))
-TRIGGERHAPPY_LICENSE = GPLv3+
+TRIGGERHAPPY_LICENSE = GPL-3.0+
 TRIGGERHAPPY_LICENSE_FILES = COPYING
 
 define TRIGGERHAPPY_BUILD_CMDS
-	$(MAKE) $(TARGET_CONFIGURE_OPTS) \
-		LINUX_INPUT_H=$(STAGING_DIR)/usr/include/linux/input.h \
-		-C $(@D) thd th-cmd
+	$(MAKE) $(TARGET_CONFIGURE_OPTS) -C $(@D) thd th-cmd
 endef
 
 ifeq ($(BR2_PACKAGE_HAS_UDEV),y)

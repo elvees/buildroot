@@ -4,13 +4,14 @@
 #
 ################################################################################
 
-MPD_VERSION_MAJOR = 0.19
-MPD_VERSION = $(MPD_VERSION_MAJOR).10
+MPD_VERSION_MAJOR = 0.20
+MPD_VERSION = $(MPD_VERSION_MAJOR).15
 MPD_SOURCE = mpd-$(MPD_VERSION).tar.xz
 MPD_SITE = http://www.musicpd.org/download/mpd/$(MPD_VERSION_MAJOR)
-MPD_DEPENDENCIES = host-pkgconf boost libglib2
-MPD_LICENSE = GPLv2+
+MPD_DEPENDENCIES = host-pkgconf boost
+MPD_LICENSE = GPL-2.0+
 MPD_LICENSE_FILES = COPYING
+MPD_AUTORECONF = YES
 
 # Some options need an explicit --disable or --enable
 
@@ -90,6 +91,12 @@ MPD_DEPENDENCIES += flac
 MPD_CONF_OPTS += --enable-flac
 else
 MPD_CONF_OPTS += --disable-flac
+endif
+
+ifeq ($(BR2_PACKAGE_MPD_HTTPD_OUTPUT),y)
+MPD_CONF_OPTS += --enable-httpd-output
+else
+MPD_CONF_OPTS += --disable-httpd-output
 endif
 
 ifeq ($(BR2_PACKAGE_MPD_JACK2),y)
@@ -188,6 +195,13 @@ else
 MPD_CONF_OPTS += --disable-pulse
 endif
 
+ifeq ($(BR2_PACKAGE_MPD_SHOUTCAST),y)
+MPD_DEPENDENCIES += libshout
+MPD_CONF_OPTS += --enable-shout
+else
+MPD_CONF_OPTS += --disable-shout
+endif
+
 ifeq ($(BR2_PACKAGE_MPD_SOUNDCLOUD),y)
 MPD_DEPENDENCIES += yajl
 MPD_CONF_OPTS += --enable-soundcloud
@@ -208,7 +222,10 @@ endif
 
 ifeq ($(BR2_PACKAGE_MPD_TREMOR),y)
 MPD_DEPENDENCIES += tremor
-MPD_CONF_OPTS += --with-tremor
+# Help mpd to find tremor in static linking scenarios
+MPD_CONF_ENV += \
+	TREMOR_LIBS="`$(PKG_CONFIG_HOST_BINARY) --libs vorbisidec`"
+MPD_CONF_OPTS += --with-tremor=$(STAGING_DIR)/usr
 endif
 
 ifeq ($(BR2_PACKAGE_MPD_TWOLAME),y)

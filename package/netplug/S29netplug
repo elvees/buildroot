@@ -11,6 +11,9 @@
 
 # Copyright 2003 Key Research, Inc.
 
+# Create needed directories
+mkdir -p /var/lock/subsys
+
 # Source function library.
 if [ -f /etc/init.d/functions ]; then
 	. /etc/init.d/functions
@@ -39,7 +42,7 @@ fi
 case "$1" in
   start)
 	# Start daemon.
-	echo -n "Starting network plug daemon: "
+	printf "Starting network plug daemon: "
 	start-stop-daemon -S -q -p /var/run/netplugd.pid -x /sbin/netplugd ${NETPLUGDARGS}
 	RETVAL=$?
 	echo
@@ -47,7 +50,7 @@ case "$1" in
 	;;
   stop)
 	# Stop daemon.
-	echo -n "Shutting down network plug daemon: "
+	printf "Shutting down network plug daemon: "
 	start-stop-daemon -K -n netplugd
 	RETVAL=$?
 	echo

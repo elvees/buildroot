@@ -23,12 +23,12 @@ HOST_DBUS_CPP_CONF_OPTS = \
 	--disable-ecore \
 	--disable-glib
 DBUS_CPP_AUTORECONF = YES
-DBUS_CPP_LICENSE = LGPLv2.1+
+DBUS_CPP_LICENSE = LGPL-2.1+
 DBUS_CPP_LICENSE_FILES = COPYING
 
-ifeq ($(BR2_PACKAGE_LIBECORE),y)
+ifeq ($(BR2_PACKAGE_EFL),y)
 DBUS_CPP_CONF_OPTS += --enable-ecore
-DBUS_CPP_DEPENDENCIES += libecore
+DBUS_CPP_DEPENDENCIES += efl
 else
 DBUS_CPP_CONF_OPTS += --disable-ecore
 endif

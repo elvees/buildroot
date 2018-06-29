@@ -1,2 +1,2 @@
-# From ftp://sources.redhat.com/pub/lvm2/md5.sum
-md5  2d24ba982c8a85e8c837210f087a6a51  LVM2.2.02.125.tgz
+# From ftp://sources.redhat.com/pub/lvm2/releases/sha512.sum
+sha512 c2ea8beafe006abf9282f51ec98600fd0ebff816d53c10ecbb19bbf336ada4825135cf9c92ccd364afb18f8b1d7e163eff5bdec8dfdd70dfb9ba45db2f6bdd5e  LVM2.2.02.173.tgz

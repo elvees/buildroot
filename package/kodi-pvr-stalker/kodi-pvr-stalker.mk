@@ -4,10 +4,12 @@
 #
 ################################################################################
 
-KODI_PVR_STALKER_VERSION = 5f6eb1992ffd45a075ebb7bc4253c4a88bf65c80
+# This cset is on the branch 'Krypton'
+# When Kodi is updated, then this should be updated to the corresponding branch
+KODI_PVR_STALKER_VERSION = 2.8.6-Krypton
 KODI_PVR_STALKER_SITE = $(call github,kodi-pvr,pvr.stalker,$(KODI_PVR_STALKER_VERSION))
-KODI_PVR_STALKER_LICENSE = GPLv2+
+KODI_PVR_STALKER_LICENSE = GPL-2.0+
 KODI_PVR_STALKER_LICENSE_FILES = src/client.h
-KODI_PVR_STALKER_DEPENDENCIES = kodi-platform
+KODI_PVR_STALKER_DEPENDENCIES = jsoncpp kodi-platform libxml2
 
 $(eval $(cmake-package))

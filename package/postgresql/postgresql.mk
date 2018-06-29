@@ -4,17 +4,18 @@
 #
 ################################################################################
 
-POSTGRESQL_VERSION = 9.4.4
+POSTGRESQL_VERSION = 10.3
 POSTGRESQL_SOURCE = postgresql-$(POSTGRESQL_VERSION).tar.bz2
 POSTGRESQL_SITE = http://ftp.postgresql.org/pub/source/v$(POSTGRESQL_VERSION)
 POSTGRESQL_LICENSE = PostgreSQL
 POSTGRESQL_LICENSE_FILES = COPYRIGHT
 POSTGRESQL_INSTALL_STAGING = YES
 POSTGRESQL_CONFIG_SCRIPTS = pg_config
-POSTGRESQL_CONF_ENV = ac_cv_type_struct_sockaddr_in6=yes \
-		      pgac_cv_snprintf_long_long_int_format="%lld" \
-		      pgac_cv_snprintf_size_t_support=yes
-POSTGRESQL_AUTORECONF = YES
+POSTGRESQL_CONF_ENV = \
+	ac_cv_type_struct_sockaddr_in6=yes \
+	pgac_cv_snprintf_long_long_int_modifier="ll" \
+	pgac_cv_snprintf_size_t_support=yes
+POSTGRESQL_CONF_OPTS = --disable-rpath
 
 ifeq ($(BR2_TOOLCHAIN_USES_UCLIBC),y)
 # PostgreSQL does not build against uClibc with locales
@@ -28,7 +29,7 @@ ifneq ($(BR2_TOOLCHAIN_HAS_THREADS),y)
 POSTGRESQL_CONF_OPTS += --disable-thread-safety
 endif
 
-ifeq ($(BR2_arcle)$(BR2_arceb)$(BR2_microblazeel)$(BR2_microblazebe)$(BR2_nios2)$(BR2_xtensa),y)
+ifeq ($(BR2_arcle)$(BR2_arceb)$(BR2_microblazeel)$(BR2_microblazebe)$(BR2_or1k)$(BR2_nios2)$(BR2_xtensa),y)
 POSTGRESQL_CONF_OPTS += --disable-spinlocks
 endif
 
@@ -49,12 +50,24 @@ POSTGRESQL_DEPENDENCIES += tzdata
 POSTGRESQL_CONF_OPTS += --with-system-tzdata=/usr/share/zoneinfo
 else
 POSTGRESQL_DEPENDENCIES += host-zic
-POSTGRESQL_CONF_ENV += ZIC=$$(ZIC)
+POSTGRESQL_CONF_ENV += ZIC="$(ZIC)"
 endif
 
 ifeq ($(BR2_PACKAGE_OPENSSL),y)
 POSTGRESQL_DEPENDENCIES += openssl
 POSTGRESQL_CONF_OPTS += --with-openssl
+else
+# PostgreSQL checks for /dev/urandom and fails if it's being cross-compiled and
+# an SSL library isn't found. Since /dev/urandom is guaranteed to be provided
+# on Linux systems, explicitly tell the configure script it's available.
+POSTGRESQL_CONF_ENV += ac_cv_file__dev_urandom=yes
+endif
+
+ifeq ($(BR2_PACKAGE_OPENLDAP),y)
+POSTGRESQL_DEPENDENCIES += openldap
+POSTGRESQL_CONF_OPTS += --with-ldap
+else
+POSTGRESQL_CONF_OPTS += --without-ldap
 endif
 
 define POSTGRESQL_USERS

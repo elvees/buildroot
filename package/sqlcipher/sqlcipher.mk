@@ -11,10 +11,11 @@ SQLCIPHER_INSTALL_STAGING = YES
 
 SQLCIPHER_CONF_ENV = \
 	CFLAGS="$(TARGET_CFLAGS) $(SQLCIPHER_CFLAGS)" \
-	TCLSH_CMD=$(HOST_DIR)/usr/bin/tclsh$(TCL_VERSION_MAJOR)
+	TCLSH_CMD=$(HOST_DIR)/bin/tclsh$(TCL_VERSION_MAJOR)
 
 SQLCIPHER_CONF_OPTS = \
-	--enable-threadsafe
+	--enable-threadsafe \
+	--disable-tcl
 
 SQLCIPHER_CFLAGS += -DSQLITE_HAS_CODEC # Required according to the README
 SQLCIPHER_CONF_ENV += LIBS="-lcrypto -lz"

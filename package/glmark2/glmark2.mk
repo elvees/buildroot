@@ -4,9 +4,9 @@
 #
 ################################################################################
 
-GLMARK2_VERSION = 499aa81a68fb4c8aac1c80f0d6a4cce05941c4cc
+GLMARK2_VERSION = 9b1070fe9c5cf908f323909d3c8cbed08022abe8
 GLMARK2_SITE = $(call github,glmark2,glmark2,$(GLMARK2_VERSION))
-GLMARK2_LICENSE = GPLv3+ SGIv1
+GLMARK2_LICENSE = GPL-3.0+, SGIv1
 GLMARK2_LICENSE_FILES = COPYING COPYING.SGI
 GLMARK2_DEPENDENCIES = host-pkgconf jpeg libpng \
 	$(if $(BR2_PACKAGE_HAS_LIBEGL),libegl) \
@@ -36,7 +36,7 @@ GLMARK2_DEPENDENCIES += wayland
 GLMARK2_FLAVORS += wayland-glesv2
 endif
 
-ifeq ($(BR2_PACKAGE_WAYLAND)$(BR2_PACKAGE_HAS_LIBGL),yy)
+ifeq ($(BR2_PACKAGE_WAYLAND)$(BR2_PACKAGE_HAS_LIBEGL)$(BR2_PACKAGE_HAS_LIBGL),yyy)
 GLMARK2_DEPENDENCIES += wayland
 GLMARK2_FLAVORS += wayland-gl
 endif
@@ -45,23 +45,4 @@ GLMARK2_CONF_OPTS += \
 	--prefix=/usr \
 	--with-flavors=$(subst $(space),$(comma),$(GLMARK2_FLAVORS))
 
-define GLMARK2_CONFIGURE_CMDS
-	(cd $(@D); \
-		PYTHON_CONFIG="$(STAGING_DIR)/usr/bin/python-config" \
-		python_LDFLAGS="" \
-		python_LIBDIR="" \
-		$(TARGET_CONFIGURE_OPTS) \
-		$(GLMARK2_CONF_ENV) \
-		./waf configure $(GLMARK2_CONF_OPTS) \
-	)
-endef
-
-define GLMARK2_BUILD_CMDS
-	cd $(@D) && $(TARGET_MAKE_ENV) ./waf
-endef
-
-define GLMARK2_INSTALL_TARGET_CMDS
-	cd $(@D) && $(TARGET_MAKE_ENV) ./waf install --destdir=$(TARGET_DIR)
-endef
-
-$(eval $(generic-package))
+$(eval $(waf-package))

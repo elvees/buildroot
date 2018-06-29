@@ -4,9 +4,10 @@
 #
 ################################################################################
 
-KEXEC_LITE_VERSION = fb8543fea3beb0522b5a63a74ea1a845dbd7b954
+KEXEC_LITE_VERSION = 87d044a895b1c004320a2676099a54a5a2a74f2e
 KEXEC_LITE_SITE = $(call github,antonblanchard,kexec-lite,$(KEXEC_LITE_VERSION))
-KEXEC_LITE_LICENSE = GPLv2+
+KEXEC_LITE_LICENSE = GPL-2.0+
+KEXEC_LITE_LICENSE_FILES = COPYING
 KEXEC_LITE_DEPENDENCIES = elfutils dtc
 
 define KEXEC_LITE_BUILD_CMDS

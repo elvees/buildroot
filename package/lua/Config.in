@@ -2,7 +2,8 @@ config BR2_PACKAGE_LUA
 	bool "lua"
 	select BR2_PACKAGE_HAS_LUAINTERPRETER
 	help
-	  Lua is a powerful, fast, light-weight, embeddable scripting language.
+	  Lua is a powerful, fast, light-weight, embeddable scripting
+	  language.
 
 	  http://www.lua.org/
 
@@ -13,18 +14,18 @@ config BR2_PACKAGE_PROVIDES_LUAINTERPRETER
 
 choice
 	prompt "Lua Version"
-	default BR2_PACKAGE_LUA_5_1
+	default BR2_PACKAGE_LUA_5_3
 	help
 	  Select the version of Lua API/ABI you wish to use.
 
-	config BR2_PACKAGE_LUA_5_1
-		bool "Lua 5.1.x"
+config BR2_PACKAGE_LUA_5_1
+	bool "Lua 5.1.x"
 
-	config BR2_PACKAGE_LUA_5_2
-		bool "Lua 5.2.x"
+config BR2_PACKAGE_LUA_5_2
+	bool "Lua 5.2.x"
 
-	config BR2_PACKAGE_LUA_5_3
-		bool "Lua 5.3.x"
+config BR2_PACKAGE_LUA_5_3
+	bool "Lua 5.3.x"
 
 endchoice
 

@@ -31,7 +31,7 @@ code for your system. It consists of a compiler (in our case, +gcc+),
 binary utils like assembler and linker (in our case, +binutils+) and a
 C standard library (for example
 http://www.gnu.org/software/libc/libc.html[GNU Libc],
-http://www.uclibc.org/[uClibc]).
+http://www.uclibc-ng.org/[uClibc-ng]).
 
 The system installed on your development station certainly already has
 a compilation toolchain that you can use to compile an application
@@ -81,9 +81,9 @@ by itself a cross-compilation toolchain, before building the userspace
 applications and libraries for your target embedded system.
 
 This backend supports several C libraries:
-http://www.uclibc.org[uClibc], the
+http://www.uclibc-ng.org[uClibc-ng],
 http://www.gnu.org/software/libc/libc.html[glibc] and
-http://www.eglibc.org[eglibc].
+http://www.musl-libc.org[musl].
 
 Once you have selected this backend, a number of options appear. The
 most important ones allow to:
@@ -146,19 +146,17 @@ cross-compilation toolchains. Buildroot knows about a number of
 well-known cross-compilation toolchains (from
 http://www.linaro.org[Linaro] for ARM,
 http://www.mentor.com/embedded-software/sourcery-tools/sourcery-codebench/editions/lite-edition/[Sourcery
-CodeBench] for ARM, x86, x86-64, PowerPC, MIPS and SuperH,
-https://blackfin.uclinux.org/gf/project/toolchain[Blackfin toolchains
-from Analog Devices], etc.) and is capable of downloading them
-automatically, or it can be pointed to a custom toolchain, either
-available for download or installed locally.
+CodeBench] for ARM, x86-64, PowerPC, and MIPS, and is capable of
+downloading them automatically, or it can be pointed to a custom
+toolchain, either available for download or installed locally.
 
 Then, you have three solutions to use an external toolchain:
 
 * Use a predefined external toolchain profile, and let Buildroot
   download, extract and install the toolchain. Buildroot already knows
-  about a few CodeSourcery, Linaro, Blackfin and Xilinx toolchains.
-  Just select the toolchain profile in +Toolchain+ from the
-  available ones. This is definitely the easiest solution.
+  about a few CodeSourcery and Linaro toolchains. Just select the
+  toolchain profile in +Toolchain+ from the available ones. This is
+  definitely the easiest solution.
 
 * Use a predefined external toolchain profile, but instead of having
   Buildroot download and extract the toolchain, you can tell Buildroot
@@ -220,8 +218,6 @@ Advantages of this backend:
 * Avoids the build time of the cross-compilation toolchain, which is
   often very significant in the overall build time of an embedded
   Linux system.
-
-* Not limited to uClibc: glibc and eglibc toolchains are supported.
 
 Drawbacks of this backend:
 
@@ -295,39 +291,42 @@ different solutions to handle the +/dev+ directory :
    responsibility to enable those two options (if you fail to do so,
    your Buildroot system will not boot).
 
- * The third solution is *Dynamic using mdev*. This method also relies
-   on the _devtmpfs_ virtual filesystem detailed above (so the
-   requirement to have +CONFIG_DEVTMPFS+ and +CONFIG_DEVTMPFS_MOUNT+
-   enabled in the kernel configuration still apply), but adds the
-   +mdev+ userspace utility on top of it. +mdev+ is a program part of
-   BusyBox that the kernel will call every time a device is added or
-   removed. Thanks to the +/etc/mdev.conf+ configuration file, +mdev+
-   can be configured to for example, set specific permissions or
-   ownership on a device file, call a script or application whenever a
-   device appears or disappear, etc. Basically, it allows _userspace_
-   to react on device addition and removal events. +mdev+ can for
-   example be used to automatically load kernel modules when devices
-   appear on the system. +mdev+ is also important if you have devices
-   that require a firmware, as it will be responsible for pushing the
-   firmware contents to the kernel. +mdev+ is a lightweight
-   implementation (with fewer features) of +udev+. For more details
-   about +mdev+ and the syntax of its configuration file, see
+ * The third solution is *Dynamic using devtmpfs + mdev*. This method
+   also relies on the _devtmpfs_ virtual filesystem detailed above (so
+   the requirement to have +CONFIG_DEVTMPFS+ and
+   +CONFIG_DEVTMPFS_MOUNT+ enabled in the kernel configuration still
+   apply), but adds the +mdev+ userspace utility on top of it. +mdev+
+   is a program part of BusyBox that the kernel will call every time a
+   device is added or removed. Thanks to the +/etc/mdev.conf+
+   configuration file, +mdev+ can be configured to for example, set
+   specific permissions or ownership on a device file, call a script
+   or application whenever a device appears or disappear,
+   etc. Basically, it allows _userspace_ to react on device addition
+   and removal events. +mdev+ can for example be used to automatically
+   load kernel modules when devices appear on the system. +mdev+ is
+   also important if you have devices that require a firmware, as it
+   will be responsible for pushing the firmware contents to the
+   kernel. +mdev+ is a lightweight implementation (with fewer
+   features) of +udev+. For more details about +mdev+ and the syntax
+   of its configuration file, see
    http://git.busybox.net/busybox/tree/docs/mdev.txt.
 
- * The fourth solution is *Dynamic using eudev*. This method also
-   relies on the _devtmpfs_ virtual filesystem detailed above, but
-   adds the +eudev+ userspace daemon on top of it. +eudev+ is a daemon
-   that runs in the background, and gets called by the kernel when a
-   device gets added or removed from the system. It is a more
-   heavyweight solution than +mdev+, but provides higher flexibility.
-   +eudev+ is a standalone version of +udev+, the original userspace
-   daemon used in most desktop Linux distributions, which is now part
-   of Systemd. For more details, see http://en.wikipedia.org/wiki/Udev.
+ * The fourth solution is *Dynamic using devtmpfs + eudev*. This
+   method also relies on the _devtmpfs_ virtual filesystem detailed
+   above, but adds the +eudev+ userspace daemon on top of it. +eudev+
+   is a daemon that runs in the background, and gets called by the
+   kernel when a device gets added or removed from the system. It is a
+   more heavyweight solution than +mdev+, but provides higher
+   flexibility.  +eudev+ is a standalone version of +udev+, the
+   original userspace daemon used in most desktop Linux distributions,
+   which is now part of Systemd. For more details, see
+   http://en.wikipedia.org/wiki/Udev.
 
 The Buildroot developers recommendation is to start with the *Dynamic
 using devtmpfs only* solution, until you have the need for userspace
 to be notified when devices are added/removed, or if firmwares are
-needed, in which case *Dynamic using mdev* is usually a good solution.
+needed, in which case *Dynamic using devtmpfs + mdev* is usually a
+good solution.
 
 Note that if +systemd+ is chosen as init system, /dev management will
 be performed by the +udev+ program provided by +systemd+.

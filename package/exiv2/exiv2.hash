@@ -1,4 +1,2 @@
-# From http://www.exiv2.org/download.html
-md5 b8a23dc56a98ede85c00718a97a8d6fc exiv2-0.24.tar.gz
 # Locally calculated
-sha256 f4a443e6c7fb9d9f5e787732f76969a64c72c4c04af69b10ed57f949c2dfef8e exiv2-0.24.tar.gz
+sha256 290cb6208f143b9bd5074d790fc8924409f28e5813356c143d739a3311d8ad76  exiv2-910f3507795e1930ae216c9febee0bf9a88e99c0.tar.gz

@@ -4,14 +4,12 @@
 #
 ################################################################################
 
-WINE_VERSION = 1.6.2
-WINE_SOURCE = wine-$(WINE_VERSION).tar.bz2
-WINE_SITE = http://downloads.sourceforge.net/project/wine/Source
-WINE_LICENSE = LGPLv2.1+
+WINE_VERSION = 3.0
+WINE_SOURCE = wine-$(WINE_VERSION).tar.xz
+WINE_SITE = https://dl.winehq.org/wine/source/3.0
+WINE_LICENSE = LGPL-2.1+
 WINE_LICENSE_FILES = COPYING.LIB LICENSE
 WINE_DEPENDENCIES = host-bison host-flex host-wine
-# For 0002-detect-ncursesw.patch
-WINE_AUTORECONF = YES
 
 # Wine needs its own directory structure and tools for cross compiling
 WINE_CONF_OPTS = \
@@ -25,9 +23,8 @@ WINE_CONF_OPTS = \
 	--without-gphoto \
 	--without-gsm \
 	--without-hal \
-	--without-openal \
+	--without-krb5 \
 	--without-opencl \
-	--without-osmesa \
 	--without-oss
 
 # Wine uses a wrapper around gcc, and uses the value of --host to
@@ -38,7 +35,7 @@ WINE_CONF_OPTS = \
 # wrapper believes what the real gcc is named, and force the tuple of
 # the external toolchain, not the one we compute in GNU_TARGET_NAME.
 ifeq ($(BR2_TOOLCHAIN_EXTERNAL),y)
-WINE_CONF_OPTS += TARGETFLAGS="-b $(call qstrip,$(BR2_TOOLCHAIN_EXTERNAL_PREFIX))"
+WINE_CONF_OPTS += TARGETFLAGS="-b $(TOOLCHAIN_EXTERNAL_PREFIX)"
 endif
 
 ifeq ($(BR2_PACKAGE_ALSA_LIB)$(BR2_PACKAGE_ALSA_LIB_SEQ)$(BR2_PACKAGE_ALSA_LIB_RAWMIDI),yyy)
@@ -51,6 +48,7 @@ endif
 ifeq ($(BR2_PACKAGE_CUPS),y)
 WINE_CONF_OPTS += --with-cups
 WINE_DEPENDENCIES += cups
+WINE_CONF_ENV += CUPS_CONFIG=$(STAGING_DIR)/usr/bin/cups-config
 else
 WINE_CONF_OPTS += --without-cups
 endif
@@ -75,6 +73,7 @@ WINE_CONF_OPTS += --with-freetype
 HOST_WINE_CONF_OPTS += --with-freetype
 WINE_DEPENDENCIES += freetype
 HOST_WINE_DEPENDENCIES += host-freetype
+WINE_CONF_ENV += FREETYPE_CONFIG=$(STAGING_DIR)/usr/bin/freetype-config
 else
 WINE_CONF_OPTS += --without-freetype
 HOST_WINE_CONF_OPTS += --without-freetype
@@ -87,9 +86,9 @@ else
 WINE_CONF_OPTS += --without-gnutls
 endif
 
-ifeq ($(BR2_PACKAGE_GST_PLUGINS_BASE),y)
+ifeq ($(BR2_PACKAGE_GST1_PLUGINS_BASE),y)
 WINE_CONF_OPTS += --with-gstreamer
-WINE_DEPENDENCIES += gst-plugins-base
+WINE_DEPENDENCIES += gst1-plugins-base
 else
 WINE_CONF_OPTS += --without-gstreamer
 endif
@@ -122,6 +121,13 @@ else
 WINE_CONF_OPTS += --without-glu
 endif
 
+ifeq ($(BR2_PACKAGE_LIBPCAP),y)
+WINE_CONF_OPTS += --with-pcap
+WINE_DEPENDENCIES += libpcap
+else
+WINE_CONF_OPTS += --without-pcap
+endif
+
 ifeq ($(BR2_PACKAGE_LIBPNG),y)
 WINE_CONF_OPTS += --with-png
 WINE_DEPENDENCIES += libpng
@@ -139,6 +145,7 @@ endif
 ifeq ($(BR2_PACKAGE_LIBXML2),y)
 WINE_CONF_OPTS += --with-xml
 WINE_DEPENDENCIES += libxml2
+WINE_CONF_ENV += XML2_CONFIG=$(STAGING_DIR)/usr/bin/xml2-config
 else
 WINE_CONF_OPTS += --without-xml
 endif
@@ -146,6 +153,7 @@ endif
 ifeq ($(BR2_PACKAGE_LIBXSLT),y)
 WINE_CONF_OPTS += --with-xslt
 WINE_DEPENDENCIES += libxslt
+WINE_CONF_ENV += XSLT_CONFIG=$(STAGING_DIR)/usr/bin/xslt-config
 else
 WINE_CONF_OPTS += --without-xslt
 endif
@@ -164,11 +172,39 @@ else
 WINE_CONF_OPTS += --without-curses
 endif
 
+ifeq ($(BR2_PACKAGE_OPENAL),y)
+WINE_CONF_OPTS += --with-openal
+WINE_DEPENDENCIES += openal
+else
+WINE_CONF_OPTS += --without-openal
+endif
+
 ifeq ($(BR2_PACKAGE_OPENLDAP),y)
 WINE_CONF_OPTS += --with-ldap
 WINE_DEPENDENCIES += openldap
 else
 WINE_CONF_OPTS += --without-ldap
+endif
+
+ifeq ($(BR2_PACKAGE_MESA3D_OSMESA),y)
+WINE_CONF_OPTS += --with-osmesa
+WINE_DEPENDENCIES += mesa3d
+else
+WINE_CONF_OPTS += --without-osmesa
+endif
+
+ifeq ($(BR2_PACKAGE_PULSEAUDIO),y)
+WINE_CONF_OPTS += --with-pulse
+WINE_DEPENDENCIES += pulseaudio
+else
+WINE_CONF_OPTS += --without-pulse
+endif
+
+ifeq ($(BR2_PACKAGE_SAMBA4),y)
+WINE_CONF_OPTS += --with-netapi
+WINE_DEPENDENCIES += samba4
+else
+WINE_CONF_OPTS += --without-netapi
 endif
 
 ifeq ($(BR2_PACKAGE_SANE_BACKENDS),y)
@@ -184,6 +220,13 @@ WINE_CONF_OPTS += --with-tiff
 WINE_DEPENDENCIES += tiff
 else
 WINE_CONF_OPTS += --without-tiff
+endif
+
+ifeq ($(BR2_PACKAGE_HAS_UDEV),y)
+WINE_CONF_OPTS += --with-udev
+WINE_DEPENDENCIES += udev
+else
+WINE_CONF_OPTS += --without-udev
 endif
 
 ifeq ($(BR2_PACKAGE_XLIB_LIBX11),y)
@@ -270,6 +313,7 @@ endif
 define HOST_WINE_BUILD_CMDS
 	$(HOST_MAKE_ENV) $(MAKE) -C $(@D) \
 	  tools \
+	  tools/sfnt2fon \
 	  tools/widl \
 	  tools/winebuild \
 	  tools/winegcc \
@@ -304,13 +348,17 @@ HOST_WINE_CONF_OPTS += \
 	--without-gstreamer \
 	--without-hal \
 	--without-jpeg \
+	--without-krb5 \
 	--without-ldap \
 	--without-mpg123 \
+	--without-netapi \
 	--without-openal \
 	--without-opencl \
 	--without-opengl \
 	--without-osmesa \
 	--without-oss \
+	--without-pcap \
+	--without-pulse \
 	--without-png \
 	--without-sane \
 	--without-tiff \

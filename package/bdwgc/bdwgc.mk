@@ -4,13 +4,14 @@
 #
 ################################################################################
 
-BDWGC_VERSION = 7.4.2
+BDWGC_VERSION = 7.6.2
 BDWGC_SOURCE = gc-$(BDWGC_VERSION).tar.gz
 BDWGC_SITE = http://www.hboehm.info/gc/gc_source
 BDWGC_INSTALL_STAGING = YES
 BDWGC_LICENSE = bdwgc license
 BDWGC_LICENSE_FILES = README.QUICK
 BDWGC_DEPENDENCIES = libatomic_ops host-pkgconf
+HOST_BDWGC_DEPENDENCIES = host-libatomic_ops host-pkgconf
 
 # The libtool shipped with the package is bogus and generates some
 # -L/usr/lib flags. It uses a version not supported by Buildroot
@@ -19,6 +20,9 @@ BDWGC_DEPENDENCIES = libatomic_ops host-pkgconf
 BDWGC_AUTORECONF = YES
 
 BDWGC_CFLAGS = $(TARGET_CFLAGS)
+ifeq ($(BR2_sparc),y)
+BDWGC_CFLAGS += -DAO_NO_SPARC_V9
+endif
 ifeq ($(BR2_STATIC_LIBS),y)
 BDWGC_CFLAGS += -DGC_NO_DLOPEN
 endif

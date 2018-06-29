@@ -7,11 +7,16 @@
 SDL_MIXER_VERSION = 1.2.12
 SDL_MIXER_SOURCE = SDL_mixer-$(SDL_MIXER_VERSION).tar.gz
 SDL_MIXER_SITE = http://www.libsdl.org/projects/SDL_mixer/release
-SDL_MIXER_LICENSE = zlib
+SDL_MIXER_LICENSE = Zlib
 SDL_MIXER_LICENSE_FILES = COPYING
 
 SDL_MIXER_INSTALL_STAGING = YES
 SDL_MIXER_DEPENDENCIES = sdl
+
+# We're patching configure.in, so we need to autoreconf
+SDL_MIXER_AUTORECONF = YES
+SDL_MIXER_AUTORECONF_OPTS = -Iacinclude
+
 SDL_MIXER_CONF_OPTS = \
 	--without-x \
 	--with-sdl-prefix=$(STAGING_DIR)/usr \

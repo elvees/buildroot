@@ -1,5 +1,2 @@
-# From http://gnuradio.org/redmine/projects/gnuradio/files
-md5	b4a917a548f41ce25c6c88f9bc864bca	gnuradio-3.7.5.tar.gz
-
-# Locally calculated:
-sha256 467f62190687a34f9faa18be8d650e28d7046b94070b1b6d94355c28beb76243  gnuradio-3.7.5.tar.gz
+# From http://gnuradio.org/releases/gnuradio/sha256sums
+sha256 87d9ba3183858efdbb237add3f9de40f7d65f25e16904a9bc8d764a7287252d4  gnuradio-3.7.11.tar.gz

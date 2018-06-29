@@ -8,10 +8,20 @@ LIBVIPS_VERSION_MAJOR = 7.42
 LIBVIPS_VERSION = $(LIBVIPS_VERSION_MAJOR).2
 LIBVIPS_SOURCE = vips-$(LIBVIPS_VERSION).tar.gz
 LIBVIPS_SITE = http://www.vips.ecs.soton.ac.uk/supported/$(LIBVIPS_VERSION_MAJOR)
-LIBVIPS_LICENSE = LGPLv2.1+
+LIBVIPS_LICENSE = LGPL-2.1+
 LIBVIPS_LICENSE_FILES = COPYING
 # We're patching gtk-doc.make, so need to autoreconf
 LIBVIPS_AUTORECONF = YES
+
+# Sparc64 compile fails, for all optimization levels except -O0. To
+# fix the problem, use -O0 with no optimization instead. Bug reported
+# upstream at https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69038.
+ifeq ($(BR2_sparc64),y)
+LIBVIPS_CXXFLAGS += -O0
+endif
+
+LIBVIPS_CONF_ENV += CXXFLAGS="$(TARGET_CXXFLAGS) $(LIBVIPS_CXXFLAGS)"
+
 LIBVIPS_CONF_OPTS = \
 	--disable-introspection \
 	--without-dmalloc \
@@ -31,7 +41,7 @@ LIBVIPS_CONF_OPTS = \
 LIBVIPS_INSTALL_STAGING = YES
 LIBVIPS_DEPENDENCIES = \
 	host-pkgconf libglib2 \
-	libxml2 $(if $(BR2_NEEDS_GETTEXT_IF_LOCALE),gettext)
+	libxml2 $(TARGET_NLS_DEPENDENCIES)
 
 # --disable-cxx is broken upstream
 # https://github.com/jcupitt/libvips/issues/231

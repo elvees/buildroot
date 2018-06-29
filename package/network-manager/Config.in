@@ -1,5 +1,7 @@
 config BR2_PACKAGE_NETWORK_MANAGER
 	bool "networkmanager"
+	depends on BR2_PACKAGE_LIBGPG_ERROR_ARCH_SUPPORTS # libgcrypt
+	depends on !BR2_STATIC_LIBS # gnutls
 	depends on BR2_USE_MMU # dbus
 	depends on BR2_PACKAGE_HAS_UDEV
 	# Tested with 3.2, but may even work with earlier versions
@@ -11,7 +13,7 @@ config BR2_PACKAGE_NETWORK_MANAGER
 	select BR2_PACKAGE_GNUTLS
 	select BR2_PACKAGE_LIBGCRYPT
 	select BR2_PACKAGE_LIBNL
-	select BR2_PACKAGE_LIBGUDEV if BR2_INIT_SYSTEMD
+	select BR2_PACKAGE_LIBGUDEV
 	select BR2_PACKAGE_UTIL_LINUX
 	select BR2_PACKAGE_UTIL_LINUX_LIBUUID
 	select BR2_PACKAGE_WIRELESS_TOOLS
@@ -19,12 +21,12 @@ config BR2_PACKAGE_NETWORK_MANAGER
 	select BR2_PACKAGE_READLINE
 	select BR2_PACKAGE_LIBNDP
 	help
-	  NetworkManager is a set of co-operative tools that make networking
-	  simple and straightforward. Whether WiFi, wired, 3G, or Bluetooth,
-	  NetworkManager allows you to quickly move from one network to
-	  another: once a network has been configured and joined once, it
-	  can be detected and re-joined automatically the next time it's
-	  available.
+	  NetworkManager is a set of co-operative tools that make
+	  networking simple and straightforward. Whether WiFi, wired,
+	  3G, or Bluetooth, NetworkManager allows you to quickly move
+	  from one network to another: once a network has been
+	  configured and joined once, it can be detected and re-joined
+	  automatically the next time it's available.
 
 	  http://projects.gnome.org/NetworkManager/
 
@@ -46,13 +48,24 @@ config BR2_PACKAGE_NETWORK_MANAGER_MODEM_MANAGER
 
 config BR2_PACKAGE_NETWORK_MANAGER_PPPD
 	bool "pppd support"
+	depends on !BR2_TOOLCHAIN_USES_MUSL # pppd
 	select BR2_PACKAGE_PPPD
 	help
 	  This option enables support for PPPD daemon
+
+comment "pppd support needs a glibc or uClibc toolchain"
+	depends on BR2_TOOLCHAIN_USES_MUSL
+
+config BR2_PACKAGE_NETWORK_MANAGER_OVS
+	bool "OpenVSwitch support"
+	select BR2_PACKAGE_JANSSON
+	help
+	  This option enables support for OpenVSwitch
+
 endif
 
-comment "NetworkManager needs udev /dev management and a (e)glibc toolchain w/ headers >= 3.7"
+comment "NetworkManager needs udev /dev management and a glibc toolchain w/ headers >= 3.7, dynamic library"
 	depends on BR2_USE_MMU
 	depends on !BR2_PACKAGE_HAS_UDEV || \
 		!BR2_TOOLCHAIN_HEADERS_AT_LEAST_3_7 || \
-		!BR2_TOOLCHAIN_USES_GLIBC
+		!BR2_TOOLCHAIN_USES_GLIBC || BR2_STATIC_LIBS
