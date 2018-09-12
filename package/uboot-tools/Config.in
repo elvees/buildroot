@@ -84,4 +84,13 @@ config BR2_PACKAGE_UBOOT_TOOLS_DUMPIMAGE
 	  The dumpimage tool from Das U-Boot bootloader, which allows
 	  extraction of data from U-Boot images.
 
+config BR2_PACKAGE_UBOOT_TOOLS_MCOM02_FW_UPDATE
+	bool "mcom02-fw-update"
+	select BR2_PACKAGE_MTD
+	select BR2_PACKAGE_MTD_MTD_DEBUG
+	help
+	  Install the mcom02-fw-update tool on the target system
+
+	  This tool allows to flash U-Boot image to MTD device from Linux.
+
 endif
