@@ -14,6 +14,11 @@ ALSA_UTILS_DEPENDENCIES = host-pkgconf alsa-lib \
 	$(if $(BR2_PACKAGE_NCURSES),ncurses) \
 	$(if $(BR2_PACKAGE_LIBSAMPLERATE),libsamplerate) \
 	$(TARGET_NLS_DEPENDENCIES)
+
+ifeq ($(BR2_PACKAGE_SYSTEMD),y)
+ALSA_UTILS_DEPENDENCIES += systemd
+endif
+
 # Regenerate aclocal.m4 to pick the patched
 # version of alsa.m4 from alsa-lib
 ALSA_UTILS_AUTORECONF = YES
