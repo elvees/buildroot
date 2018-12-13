@@ -120,4 +120,14 @@ define BLUEZ5_UTILS_INSTALL_INIT_SYSTEMD
 		$(TARGET_DIR)/etc/systemd/system/dbus-org.bluez.service
 endef
 
+define BLUEZ5_UTILS_INSTALL_BTMGMT
+	$(INSTALL) -D -m 0755 $(@D)/tools/btmgmt $(TARGET_DIR)/usr/bin/btmgmt
+endef
+BLUEZ5_UTILS_POST_INSTALL_TARGET_HOOKS += BLUEZ5_UTILS_INSTALL_BTMGMT
+
+define BLUEZ5_UTILS_INSTALL_BTGATT_CLIENT
+	$(INSTALL) -D -m 0755 $(@D)/tools/btgatt-client $(TARGET_DIR)/usr/bin/btgatt-client
+endef
+BLUEZ5_UTILS_POST_INSTALL_TARGET_HOOKS += BLUEZ5_UTILS_INSTALL_BTGATT_CLIENT
+
 $(eval $(autotools-package))
