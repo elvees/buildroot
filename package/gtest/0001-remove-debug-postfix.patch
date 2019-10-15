@@ -1,0 +1,28 @@
+From cb529aa0651360bed9c3302404ae57ff95d73e64 Mon Sep 17 00:00:00 2001
+From: Georgy Macharadze <gmacharadze@elvees.com>
+Date: Wed, 30 Oct 2019 13:11:20 +0300
+Subject: [PATCH] gtest: Remove debug postfix
+
+This hack is for correct work find_package() in cmake.
+---
+ googletest/cmake/internal_utils.cmake | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/googletest/cmake/internal_utils.cmake b/googletest/cmake/internal_utils.cmake
+index 2f70f0b0..fb5c54e8 100644
+--- a/googletest/cmake/internal_utils.cmake
++++ b/googletest/cmake/internal_utils.cmake
+@@ -151,10 +151,6 @@ function(cxx_library_with_type name type cxx_flags)
+   set_target_properties(${name}
+     PROPERTIES
+     COMPILE_FLAGS "${cxx_flags}")
+-  # Generate debug library name with a postfix.
+-  set_target_properties(${name}
+-    PROPERTIES
+-    DEBUG_POSTFIX "d")
+   # Set the output directory for build artifacts
+   set_target_properties(${name}
+     PROPERTIES
+-- 
+2.23.0
+

@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-GTEST_VERSION = release-1.8.0
+GTEST_VERSION = release-1.10.0
 GTEST_SITE = $(call github,google,googletest,$(GTEST_VERSION))
 GTEST_INSTALL_STAGING = YES
 GTEST_INSTALL_TARGET = NO
