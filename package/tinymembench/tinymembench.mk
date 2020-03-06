@@ -4,8 +4,9 @@
 #
 ################################################################################
 
-TINYMEMBENCH_VERSION = v0.4
-TINYMEMBENCH_SITE = $(call github,ssvb,tinymembench,$(TINYMEMBENCH_VERSION))
+TINYMEMBENCH_VERSION = master
+TINYMEMBENCH_SITE = ssh://gerrit.elvees.com:29418/tools/tinymembench
+TINYMEMBENCH_SITE_METHOD = git
 TINYMEMBENCH_LICENSE = MIT
 TINYMEMBENCH_LICENSE_FILES = LICENSE
 
