@@ -4,9 +4,9 @@
 #
 ################################################################################
 
-FFMPEG_VERSION = 3.4.2
-FFMPEG_SOURCE = ffmpeg-$(FFMPEG_VERSION).tar.xz
-FFMPEG_SITE = http://ffmpeg.org/releases
+FFMPEG_VERSION = mcom02
+FFMPEG_SITE = ssh://gerrit.elvees.com:29418/tools/ffmpeg
+FFMPEG_SITE_METHOD = git
 FFMPEG_INSTALL_STAGING = YES
 
 FFMPEG_LICENSE = LGPL-2.1+, libjpeg license
