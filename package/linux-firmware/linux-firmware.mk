@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-LINUX_FIRMWARE_VERSION = 65b1c68c63f974d72610db38dfae49861117cae2
+LINUX_FIRMWARE_VERSION = 20190717
 LINUX_FIRMWARE_SITE = http://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
 LINUX_FIRMWARE_SITE_METHOD = git
 
@@ -12,6 +12,11 @@ LINUX_FIRMWARE_SITE_METHOD = git
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_INTEL_SST_DSP),y)
 LINUX_FIRMWARE_FILES += intel/fw_sst_0f28.bin-48kHz_i2s_master
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.fw_sst_0f28
+endif
+
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_AMDGPU),y)
+LINUX_FIRMWARE_DIRS += amdgpu
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENSE.amdgpu
 endif
 
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_I915),y)
@@ -22,6 +27,16 @@ endif
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_RADEON),y)
 LINUX_FIRMWARE_DIRS += radeon
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENSE.radeon
+endif
+
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_QCOM_VENUS),y)
+LINUX_FIRMWARE_DIRS += qcom/venus-1.8 qcom/venus-4.2
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENSE.qcom qcom/NOTICE.txt
+endif
+
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_QCOM_ADRENO),y)
+LINUX_FIRMWARE_FILES += qcom/a*
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENSE.qcom qcom/NOTICE.txt
 endif
 
 # Intel Wireless Bluetooth
@@ -99,6 +114,37 @@ LINUX_FIRMWARE_FILES += \
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.rtlwifi_firmware.txt
 endif
 
+# ar3011
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_AR3011),y)
+LINUX_FIRMWARE_FILES += ath3k-1.fw
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.atheros_firmware
+endif
+
+# ar3012
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_AR3012_USB),y)
+LINUX_FIRMWARE_FILES += \
+	ar3k/AthrBT_0x01020001.dfu \
+	ar3k/ramps_0x01020001_26.dfu \
+	ar3k/AthrBT_0x01020200.dfu \
+	ar3k/ramps_0x01020200_26.dfu \
+	ar3k/ramps_0x01020200_40.dfu \
+	ar3k/AthrBT_0x31010000.dfu \
+	ar3k/ramps_0x31010000_40.dfu \
+	ar3k/AthrBT_0x11020000.dfu \
+	ar3k/ramps_0x11020000_40.dfu \
+	ar3k/ramps_0x01020201_26.dfu \
+	ar3k/ramps_0x01020201_40.dfu \
+	ar3k/AthrBT_0x41020000.dfu \
+	ar3k/ramps_0x41020000_40.dfu \
+	ar3k/AthrBT_0x11020100.dfu \
+	ar3k/ramps_0x11020100_40.dfu \
+	ar3k/AthrBT_0x31010100.dfu \
+	ar3k/ramps_0x31010100_40.dfu \
+	ar3k/AthrBT_0x01020201.dfu
+LINUX_FIRMWARE_ALL_LICENSE_FILES += \
+	LICENCE.atheros_firmware LICENSE.QualcommAtheros_ar3k
+endif
+
 # ar6002
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_ATHEROS_6002),y)
 LINUX_FIRMWARE_FILES += ath6k/AR6002
@@ -143,6 +189,17 @@ LINUX_FIRMWARE_FILES += ath10k/QCA988X/hw2.0/board.bin \
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.atheros_firmware
 endif
 
+# ath10k-qca6174
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_ATHEROS_10K_QCA6174),y)
+LINUX_FIRMWARE_FILES += ath10k/QCA6174/hw3.0/board.bin \
+			ath10k/QCA6174/hw3.0/board-2.bin \
+			ath10k/QCA6174/hw3.0/firmware-4.bin \
+			ath10k/QCA6174/hw3.0/firmware-6.bin
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.atheros_firmware \
+				ath10k/QCA6174/hw3.0/notice_ath10k_firmware-4.txt \
+				ath10k/QCA6174/hw3.0/notice_ath10k_firmware-6.txt
+endif
+
 # sd8686 v8
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_LIBERTAS_SD8686_V8),y)
 LINUX_FIRMWARE_FILES += libertas/sd8686_v8.bin libertas/sd8686_v8_helper.bin
@@ -160,6 +217,24 @@ ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_LIBERTAS_SD8688),y)
 LINUX_FIRMWARE_FILES += libertas/sd8688.bin libertas/sd8688_helper.bin
 # The two files above are but symlinks to those two ones:
 LINUX_FIRMWARE_FILES += mrvl/sd8688.bin mrvl/sd8688_helper.bin
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.Marvell
+endif
+
+# usb8388 v9
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_LIBERTAS_USB8388_V9),y)
+LINUX_FIRMWARE_FILES += libertas/usb8388_v9.bin
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.Marvell
+endif
+
+# usb8388 olpc
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_LIBERTAS_USB8388_OLPC),y)
+LINUX_FIRMWARE_FILES += libertas/usb8388_olpc.bin
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.Marvell
+endif
+
+# lbtf usb
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_LIBERTAS_USB_THINFIRM),y)
+LINUX_FIRMWARE_FILES += lbtf_usb.bin
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.Marvell
 endif
 
@@ -217,10 +292,30 @@ LINUX_FIRMWARE_FILES += mt7601u.bin
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.ralink_a_mediatek_company_firmware
 endif
 
+# MT7650
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_MEDIATEK_MT7650),y)
+LINUX_FIRMWARE_FILES += mt7650.bin
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.ralink_a_mediatek_company_firmware
+endif
+
+# MT76x2e
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_MEDIATEK_MT76X2E),y)
+LINUX_FIRMWARE_FILES += mt7662.bin mt7662_rom_patch.bin
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.ralink_a_mediatek_company_firmware
+endif
+
 # qca6174
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_QUALCOMM_6174),y)
 LINUX_FIRMWARE_FILES += ath10k/QCA6174
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENSE.QualcommAtheros_ath10k
+endif
+
+# CC2560(A)
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_TI_CC2560),y)
+LINUX_FIRMWARE_FILES += \
+	ti-connectivity/TIInit_6.2.31.bts \
+	ti-connectivity/TIInit_6.6.15.bts
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.ti-connectivity
 endif
 
 # wl127x
@@ -355,6 +450,18 @@ LINUX_FIRMWARE_FILES += cxgb4/t5fw*.bin
 LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.chelsio_firmware
 endif
 
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_INTEL_E100),y)
+LINUX_FIRMWARE_FILES += e100/*.bin
+LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.e100
+endif
+
+ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_QLOGIC_4X),y)
+LINUX_FIRMWARE_FILES += \
+	qed/qed_init_values_zipped-*.bin
+# No license file; the license is in the file WHENCE
+# which is installed unconditionally
+endif
+
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_RTL_8169),y)
 LINUX_FIRMWARE_FILES += \
 	rtl_nic/rtl8105e-1.fw \
@@ -443,7 +550,10 @@ LINUX_FIRMWARE_ALL_LICENSE_FILES += LICENCE.qla2xxx
 endif
 
 ifeq ($(BR2_PACKAGE_LINUX_FIRMWARE_REDPINE_RS9113),y)
-LINUX_FIRMWARE_FILES += rsi/rs9113_wlan_qspi.rps
+LINUX_FIRMWARE_FILES += \
+	rsi/rs9113_ap_bt_dual_mode.rps \
+	rsi/rs9113_wlan_bt_dual_mode.rps \
+	rsi/rs9113_wlan_qspi.rps
 # No license file; the license is in the file WHENCE
 # which is installed unconditionally
 endif
@@ -478,6 +588,7 @@ ifneq ($(LINUX_FIRMWARE_DIRS),)
 define LINUX_FIRMWARE_INSTALL_DIRS
 	$(foreach d,$(LINUX_FIRMWARE_DIRS), \
 		rm -rf $(TARGET_DIR)/lib/firmware/$(d); \
+		mkdir -p $(dir $(TARGET_DIR)/lib/firmware/$(d)); \
 		cp -a $(@D)/$(d) $(TARGET_DIR)/lib/firmware/$(d)$(sep))
 endef
 endif

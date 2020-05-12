@@ -23,6 +23,7 @@ define IFUPDOWN_SCRIPTS_DHCP
 		echo "iface $(IFUPDOWN_SCRIPTS_DHCP_IFACE) inet dhcp"; \
 		echo "  pre-up /etc/network/nfs_check"; \
 		echo "  wait-delay 15"; \
+		echo "  hostname \$$(hostname)"; \
 	) >> $(TARGET_DIR)/etc/network/interfaces
 	$(INSTALL) -m 0755 -D $(IFUPDOWN_SCRIPTS_PKGDIR)/nfs_check \
 		$(TARGET_DIR)/etc/network/nfs_check
@@ -47,9 +48,6 @@ endef
 define IFUPDOWN_SCRIPTS_INSTALL_INIT_SYSTEMD
 	$(INSTALL) -D -m 644 $(IFUPDOWN_SCRIPTS_PKGDIR)/network.service \
 		$(TARGET_DIR)/etc/systemd/system/network.service
-	mkdir -p $(TARGET_DIR)/etc/systemd/system/multi-user.target.wants
-	ln -fs ../network.service \
-		$(TARGET_DIR)/etc/systemd/system/multi-user.target.wants/network.service
 endef
 
 $(eval $(generic-package))

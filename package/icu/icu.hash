@@ -1,3 +1,4 @@
-# From http://download.icu-project.org/files/icu4c/60.1/SHASUM512.txt
-sha512 a6798f70add1b3bac2197a49e09a0bb636279af7019ce572f63a30ab713e09657ee9d9b20aac7ea806fbb84667ca2eca981411e5053b47c3c705aa496a669233  icu4c-60_1-src.tgz
-sha256 24c771ce37201a3ab604852e47d10d21595d0493269dd6c8a5e567e998e18c00  LICENSE
+# From https://github.com/unicode-org/icu/releases/download/release-65-1/SHASUM512.txt
+sha512 8f1ef33e1f4abc9a8ee870331c59f01b473d6da1251a19ce403f822f3e3871096f0791855d39c8f20c612fc49cda2c62c06864aa32ddab2dbd186d2b21ce9139  icu4c-65_1-src.tgz
+# Locally computed
+sha256 6a18c5fac70d7860b57f5b72b4e2c9a1ba6b3d2741eef7ff9767c5379364f10d  LICENSE

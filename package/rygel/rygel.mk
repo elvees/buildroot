@@ -5,7 +5,7 @@
 ################################################################################
 
 RYGEL_VERSION_MAJOR = 0.36
-RYGEL_VERSION = $(RYGEL_VERSION_MAJOR).0
+RYGEL_VERSION = $(RYGEL_VERSION_MAJOR).2
 RYGEL_SOURCE = rygel-$(RYGEL_VERSION).tar.xz
 RYGEL_SITE = http://ftp.gnome.org/pub/gnome/sources/rygel/$(RYGEL_VERSION_MAJOR)
 RYGEL_LICENSE = LGPL-2.1+, CC-BY-SA-3.0 (logo)
@@ -14,11 +14,11 @@ RYGEL_DEPENDENCIES = \
 	gupnp-av \
 	libgee \
 	libmediaart \
-	sqlite
+	sqlite \
+	$(TARGET_NLS_DEPENDENCIES)
 RYGEL_INSTALL_STAGING = YES
-# We're patching configure.ac
-RYGEL_AUTORECONF = YES
 
+RYGEL_CONF_ENV = LIBS=$(TARGET_NLS_LIBS)
 RYGEL_CONF_OPTS += \
 	--disable-apidocs \
 	--disable-coverage \
@@ -66,9 +66,6 @@ endef
 define RYGEL_INSTALL_INIT_SYSTEMD
 	$(INSTALL) -D -m 644 package/rygel/rygel.service \
 		$(TARGET_DIR)/usr/lib/systemd/system/rygel.service
-	mkdir -p $(TARGET_DIR)/etc/systemd/system/multi-user.target.wants
-	ln -sf ../../../../usr/lib/systemd/system/rygel.service \
-		$(TARGET_DIR)/etc/systemd/system/multi-user.target.wants/rygel.service
 endef
 
 $(eval $(autotools-package))

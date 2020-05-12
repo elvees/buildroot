@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-INADYN_VERSION = 2.2.1
+INADYN_VERSION = 2.5
 INADYN_SITE = https://github.com/troglobit/inadyn/releases/download/v$(INADYN_VERSION)
 INADYN_SOURCE = inadyn-$(INADYN_VERSION).tar.xz
 INADYN_LICENSE = GPL-2.0+
@@ -34,9 +34,6 @@ endef
 define INADYN_INSTALL_INIT_SYSTEMD
 	$(INSTALL) -D -m 644 package/inadyn/inadyn.service \
 		$(TARGET_DIR)/usr/lib/systemd/system/inadyn.service
-	mkdir -p $(TARGET_DIR)/etc/systemd/system/multi-user.target.wants
-	ln -sf ../../../../usr/lib/systemd/system/inadyn.service \
-		$(TARGET_DIR)/etc/systemd/system/multi-user.target.wants/inadyn.service
 endef
 
 $(eval $(autotools-package))
