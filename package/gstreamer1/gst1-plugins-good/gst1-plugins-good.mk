@@ -4,9 +4,10 @@
 #
 ################################################################################
 
-GST1_PLUGINS_GOOD_VERSION = 1.16.2
-GST1_PLUGINS_GOOD_SOURCE = gst-plugins-good-$(GST1_PLUGINS_GOOD_VERSION).tar.xz
-GST1_PLUGINS_GOOD_SITE = https://gstreamer.freedesktop.org/src/gst-plugins-good
+GST1_PLUGINS_GOOD_VERSION = mcom02
+GST1_PLUGINS_GOOD_SITE = ssh://gerrit.elvees.com:29418/lib/gst-plugins-good
+GST1_PLUGINS_GOOD_SITE_METHOD = git
+GST1_PLUGINS_GOOD_GIT_SUBMODULES = YES
 GST1_PLUGINS_GOOD_LICENSE_FILES = COPYING
 GST1_PLUGINS_GOOD_LICENSE = LGPL-2.1+
 
