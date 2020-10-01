@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-BIND_VERSION = 9.11.6-P1
+BIND_VERSION = 9.11.22
 BIND_SITE = https://ftp.isc.org/isc/bind9/$(BIND_VERSION)
 # bind does not support parallel builds.
 BIND_MAKE = $(MAKE1)
@@ -18,7 +18,7 @@ BIND_TARGET_SERVER_SBIN += dnssec-settime dnssec-verify genrandom
 BIND_TARGET_SERVER_SBIN += isc-hmac-fixup named-journalprint nsec3hash
 BIND_TARGET_SERVER_SBIN += lwresd named named-checkconf named-checkzone
 BIND_TARGET_SERVER_SBIN += named-compilezone rndc rndc-confgen dnssec-dsfromkey
-BIND_TARGET_SERVER_SBIN += dnssec-keyfromlabel dnssec-signzone
+BIND_TARGET_SERVER_SBIN += dnssec-keyfromlabel dnssec-signzone tsig-keygen
 BIND_TARGET_TOOLS_BIN = dig host nslookup nsupdate
 BIND_CONF_ENV = \
 	BUILD_CC="$(TARGET_CC)" \
@@ -111,11 +111,6 @@ endef
 define BIND_INSTALL_INIT_SYSTEMD
 	$(INSTALL) -D -m 644 $(BIND_PKGDIR)/named.service \
 		$(TARGET_DIR)/usr/lib/systemd/system/named.service
-
-	mkdir -p $(TARGET_DIR)/etc/systemd/system/multi-user.target.wants
-
-	ln -sf /usr/lib/systemd/system/named.service \
-		$(TARGET_DIR)/etc/systemd/system/multi-user.target.wants/named.service
 endef
 else
 BIND_POST_INSTALL_TARGET_HOOKS += BIND_TARGET_REMOVE_SERVER

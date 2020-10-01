@@ -42,13 +42,13 @@ source "toolchain/toolchain-external/toolchain-external-codescape-mti-mips/Confi
 # NIOSII
 source "toolchain/toolchain-external/toolchain-external-codesourcery-niosII/Config.in"
 
-# x86_64
-source "toolchain/toolchain-external/toolchain-external-codesourcery-amd64/Config.in"
-
 # Kept last, so it remains the non-default choice, unless there isn't
 # any available toolchain profile for the currently selected
-# architecture.
+# architecture, but before toolchains from br2-external trees.
 source "toolchain/toolchain-external/toolchain-external-custom/Config.in"
+
+# Toolchains from br2-external trees, if any
+source "$BR2_BASE_DIR/.br2-external.in.toolchains"
 
 endchoice
 
@@ -145,9 +145,6 @@ source "toolchain/toolchain-external/toolchain-external-codescape-mti-mips/Confi
 
 # NIOSII
 source "toolchain/toolchain-external/toolchain-external-codesourcery-niosII/Config.in.options"
-
-# x86_64
-source "toolchain/toolchain-external/toolchain-external-codesourcery-amd64/Config.in.options"
 
 # Custom toolchains
 source "toolchain/toolchain-external/toolchain-external-custom/Config.in.options"

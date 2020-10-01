@@ -4,12 +4,11 @@
 #
 ################################################################################
 
-WOLFSSL_VERSION = 4.0.0
-WOLFSSL_SITE = https://github.com/wolfSSL/wolfssl/archive
-WOLFSSL_SOURCE = v$(WOLFSSL_VERSION)-stable.tar.gz
+WOLFSSL_VERSION = 4.5.0-stable
+WOLFSSL_SITE = $(call github,wolfSSL,wolfssl,v$(WOLFSSL_VERSION))
 WOLFSSL_INSTALL_STAGING = YES
 
-WOLFSSL_LICENSE = GPL-2.0
+WOLFSSL_LICENSE = GPL-2.0+
 WOLFSSL_LICENSE_FILES = COPYING LICENSING
 
 WOLFSSL_DEPENDENCIES = host-pkgconf

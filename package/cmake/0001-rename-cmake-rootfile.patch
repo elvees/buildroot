@@ -1,3 +1,8 @@
+From 68d3b1dfbbd2f54bf81986d1d733deaf66658b15 Mon Sep 17 00:00:00 2001
+From: Davide Viti <zinosat@tiscali.it>
+Date: Thu, 14 Jul 2016 10:14:59 +0100
+Subject: [PATCH] rename cmake rootfile
+
 ctest fails on the target, because it cannot find CMake.cmake inside
 CMAKE_DATA_DIR (typically set to "/usr/share/cmake-3.0"): all *.cmake
 files are removed at build time via the target-finalize rule.
