@@ -293,6 +293,7 @@ define NGINX_INSTALL_TARGET_CMDS
 	$(RM) $(TARGET_DIR)/usr/sbin/nginx.old
 	$(INSTALL) -D -m 0664 package/nginx/nginx.logrotate \
 		$(TARGET_DIR)/etc/logrotate.d/nginx
+	$(INSTALL) -m 0755 -d $(TARGET_DIR)/var/tmp/nginx
 endef
 
 define NGINX_INSTALL_INIT_SYSTEMD
