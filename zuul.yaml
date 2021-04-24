@@ -2,7 +2,19 @@
     experimental:
       jobs:
         - mcom02-buildroot-build-centos9
+        - mcom02-linux44-sw-salutepm2-om1-tests:
+            dependencies: mcom02-buildroot-build-centos9
+        - mcom02-linux44-sw-saluted1-tests:
+            dependencies: mcom02-buildroot-build-centos9
+        - libfc-linux44-fct-salutepmukf-tests:
+            dependencies: mcom02-buildroot-build-centos9
         - mcom02-buildroot-build-ubuntu22.04
+        - mcom02-linux54-sw-salutepm2-om1-tests:
+            dependencies: mcom02-buildroot-build-ubuntu22.04
+        - mcom02-linux54-sw-saluted1-tests:
+            dependencies: mcom02-buildroot-build-ubuntu22.04
+        - libfc-linux54-fct-salutepmukf-tests:
+            dependencies: mcom02-buildroot-build-ubuntu22.04
     check:
       jobs:
         - mcom02-buildroot-build
