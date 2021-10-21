@@ -12,10 +12,10 @@ endif
 
 # Not possible to directly refer to mesa3d variables, because of
 # first/second expansion trickery...
-MESA3D_HEADERS_VERSION = 17.0.7
-MESA3D_HEADERS_SOURCE = mesa-$(MESA3D_HEADERS_VERSION).tar.xz
-MESA3D_HEADERS_SITE = https://mesa.freedesktop.org/archive
-MESA3D_HEADERS_LICENSE = MIT, SGI, Khronos
+MESA3D_HEADERS_VERSION = powervr-17.0.y
+MESA3D_HEADERS_SITE = ssh://gerrit.elvees.com:29418/tools/mesa
+MESA3D_HEADERS_SITE_METHOD = git
+MESA3D_HEADERS_LICENSE = Proprietary
 MESA3D_HEADERS_LICENSE_FILES = docs/license.html
 
 # Only installs header files
