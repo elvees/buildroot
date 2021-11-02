@@ -13,6 +13,10 @@ MESA3D_LICENSE_FILES = docs/license.html
 MESA3D_AUTORECONF = YES
 
 MESA3D_INSTALL_STAGING = YES
+MESA3D_INSTALL_IMAGES = YES
+
+# Path to the directory with binaries for tarball creation
+MESA3D_TARGET_FILES_DIR=$(@D)/binaries
 
 MESA3D_PROVIDES =
 
@@ -208,5 +212,16 @@ endif
 
 # Avoid automatic search of llvm-config
 MESA3D_CONF_OPTS += --with-llvm-prefix=$(STAGING_DIR)/usr/bin
+
+define MESA3D_INSTALL_IMAGES_CMDS
+	# Create directory for binaries
+	rm -rf $(MESA3D_TARGET_FILES_DIR)
+	mkdir -p $(MESA3D_TARGET_FILES_DIR)
+
+	DESTDIR=$(MESA3D_TARGET_FILES_DIR) $(MAKE) -C $(@D) install
+
+	tar -C $(MESA3D_TARGET_FILES_DIR) -czf $(BINARIES_DIR)/mesa3d-$(MESA3D_VERSION).tar.gz .
+endef
+
 
 $(eval $(autotools-package))
