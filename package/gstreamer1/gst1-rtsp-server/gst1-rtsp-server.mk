@@ -19,11 +19,6 @@ GST1_RTSP_SERVER_DEPENDENCIES = \
 GST1_RTSP_SERVER_LDFLAGS = $(TARGET_LDFLAGS) $(TARGET_NLS_LIBS)
 
 GST1_RTSP_SERVER_CONF_OPTS = \
-	-Dexamples=disabled \
-	-Dtests=disabled
-
-GST1_RTSP_SERVER_CONF_OPTS += \
-	-Dexamples=disabled \
 	-Dtests=disabled \
 	-Dgobject-cast-checks=disabled \
 	-Dglib-asserts=disabled \
@@ -44,10 +39,9 @@ ifeq ($(BR2_PACKAGE_GST1_PLUGINS_BAD),y)
 GST1_RTSP_SERVER_DEPENDENCIES += gst1-plugins-bad
 endif
 
-GST1_RTSP_SERVER_CONF_OPTS += --enable-examples
-
 define GST1_RTSP_SERVER_POST_INSTALL_TEST_LAUNCH
-	$(INSTALL) -D -m 0755 $(@D)/examples/test-launch $(TARGET_DIR)/usr/bin/gst-rtsp-test-launch
+	$(INSTALL) -D -m 0755 $(@D)/build/examples/test-launch \
+		$(TARGET_DIR)/usr/bin/gst-rtsp-test-launch
 endef
 GST1_RTSP_SERVER_POST_INSTALL_TARGET_HOOKS += GST1_RTSP_SERVER_POST_INSTALL_TEST_LAUNCH
 
