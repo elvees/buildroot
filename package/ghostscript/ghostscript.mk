@@ -4,13 +4,11 @@
 #
 ################################################################################
 
-GHOSTSCRIPT_VERSION = 9.52
+GHOSTSCRIPT_VERSION = 9.53.3
 GHOSTSCRIPT_SITE = https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs$(subst .,,$(GHOSTSCRIPT_VERSION))
-GHOSTSCRIPT_SOURCE = ghostscript-$(GHOSTSCRIPT_VERSION).tar.xz
 GHOSTSCRIPT_LICENSE = AGPL-3.0
 GHOSTSCRIPT_LICENSE_FILES = LICENSE
-# 0001-Fix-cross-compilation-issue.patch
-GHOSTSCRIPT_AUTORECONF = YES
+GHOSTSCRIPT_CPE_ID_VENDOR = artifex
 GHOSTSCRIPT_DEPENDENCIES = \
 	host-lcms2 \
 	host-libjpeg \
@@ -22,6 +20,9 @@ GHOSTSCRIPT_DEPENDENCIES = \
 	lcms2 \
 	libpng \
 	tiff
+
+# 0002-Bug-704342-Include-device-specifier-strings-in-acces.patch
+GHOSTSCRIPT_IGNORE_CVES += CVE-2021-3781
 
 # Ghostscript includes (old) copies of several libraries, delete them.
 # Inspired by linuxfromscratch:
@@ -70,7 +71,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_CUPS),y)
 GHOSTSCRIPT_DEPENDENCIES += cups
-GHOSTSCRIPT_CONF_OPTS  += \
+GHOSTSCRIPT_CONF_OPTS += \
 	CUPSCONFIG=$(STAGING_DIR)/usr/bin/cups-config \
 	--enable-cups
 else

@@ -4,11 +4,13 @@
 #
 ################################################################################
 
-GST1_RTSP_SERVER_VERSION = 1.16.2
+GST1_RTSP_SERVER_VERSION = 1.18.5
 GST1_RTSP_SERVER_SOURCE = gst-rtsp-server-$(GST1_RTSP_SERVER_VERSION).tar.xz
 GST1_RTSP_SERVER_SITE = http://gstreamer.freedesktop.org/src/gst-rtsp-server
 GST1_RTSP_SERVER_LICENSE = LGPL-2.0+
 GST1_RTSP_SERVER_LICENSE_FILES = COPYING COPYING.LIB
+GST1_RTSP_SERVER_CPE_ID_VENDOR = gstreamer_project
+GST1_RTSP_SERVER_CPE_ID_PRODUCT = gst-rtsp-server
 GST1_RTSP_SERVER_INSTALL_STAGING = YES
 GST1_RTSP_SERVER_DEPENDENCIES = \
 	host-pkgconf \
@@ -19,6 +21,7 @@ GST1_RTSP_SERVER_DEPENDENCIES = \
 GST1_RTSP_SERVER_LDFLAGS = $(TARGET_LDFLAGS) $(TARGET_NLS_LIBS)
 
 GST1_RTSP_SERVER_CONF_OPTS = \
+	-Ddoc=disabled
 	-Dtests=disabled \
 	-Dgobject-cast-checks=disabled \
 	-Dglib-asserts=disabled \

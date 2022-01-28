@@ -1,3 +1,5 @@
 # md5, sha256 from https://pypi.org/pypi/aioconsole/json
-md5  cf0a22b980bfd30e0c72160de8c66cbb  aioconsole-0.2.1.tar.gz
-sha256  f63d007c5c0fd5a30769af0a6b749307ea86001c4f217d3e5e9e248ccdfec1d0  aioconsole-0.2.1.tar.gz
+md5  b8cbcb6e00d8e535256526dfe4f27db3  aioconsole-0.3.2.tar.gz
+sha256  9355b36d41d5fbdd3dbb01510deb2b985b508b2ebcd5b8bd85af61a707e2f6c8  aioconsole-0.3.2.tar.gz
+# Locally computed sha256 checksums
+sha256  fe3eea6c599e23a00c08c5f5cb2320c30adc8f8687db5fcec9b79a662c53ff6b  LICENSE
