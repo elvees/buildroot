@@ -23,6 +23,7 @@ MESA3D_PROVIDES =
 MESA3D_DEPENDENCIES = \
 	host-bison \
 	host-flex \
+	host-python-mako \
 	expat \
 	libdrm
 
