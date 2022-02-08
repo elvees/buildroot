@@ -159,12 +159,30 @@ ifeq ($(BR2_LINUX_KERNEL_DTB_OVERLAY_SUPPORT),y)
 LINUX_MAKE_ENV += DTC_FLAGS=-@
 endif
 
+# Compute the arch path, since i386 and x86_64 are in arch/x86 and not
+# in arch/$(KERNEL_ARCH). Even if the kernel creates symbolic links
+# for bzImage, arch/i386 and arch/x86_64 do not exist when copying the
+# defconfig file.
+ifeq ($(KERNEL_ARCH),i386)
+LINUX_ARCH_PATH = $(LINUX_DIR)/arch/x86
+else ifeq ($(KERNEL_ARCH),x86_64)
+LINUX_ARCH_PATH = $(LINUX_DIR)/arch/x86
+else
+LINUX_ARCH_PATH = $(LINUX_DIR)/arch/$(KERNEL_ARCH)
+endif
+
 # Get the real Linux version, which tells us where kernel modules are
 # going to be installed in the target filesystem.
 # Filter out 'w' from MAKEFLAGS, to workaround a bug in make 4.1 (#13141)
 LINUX_VERSION_PROBED = `MAKEFLAGS='$(filter-out w,$(MAKEFLAGS))' $(MAKE) $(LINUX_MAKE_FLAGS) -C $(LINUX_DIR) --no-print-directory -s kernelrelease 2>/dev/null`
 
-LINUX_DTS_NAME += $(call qstrip,$(BR2_LINUX_KERNEL_INTREE_DTS_NAME))
+# Because wildcards only work if files exist, please make sure LINUX_DTS_NAME
+# and its derivatives are only expanded in LINUX_BUILD_CMDS and LINUX_INSTALL_CMDS
+
+LINUX_DTS_NAME += \
+	$(foreach dts,$(filter %.dts,$(wildcard $(LINUX_ARCH_PATH)/boot/dts/$(call qstrip,$(BR2_LINUX_KERNEL_INTREE_DTS_NAME)))), \
+		$(call qstrip,$(subst $(LINUX_ARCH_PATH)/boot/dts/,,$(basename $(dts)))))
+
 
 # We keep only the .dts files, so that the user can specify both .dts
 # and .dtsi files in BR2_LINUX_KERNEL_CUSTOM_DTS_PATH. Both will be
@@ -221,18 +239,6 @@ endif
 LINUX_KERNEL_UIMAGE_LOADADDR = $(call qstrip,$(BR2_LINUX_KERNEL_UIMAGE_LOADADDR))
 ifneq ($(LINUX_KERNEL_UIMAGE_LOADADDR),)
 LINUX_MAKE_FLAGS += LOADADDR="$(LINUX_KERNEL_UIMAGE_LOADADDR)"
-endif
-
-# Compute the arch path, since i386 and x86_64 are in arch/x86 and not
-# in arch/$(KERNEL_ARCH). Even if the kernel creates symbolic links
-# for bzImage, arch/i386 and arch/x86_64 do not exist when copying the
-# defconfig file.
-ifeq ($(KERNEL_ARCH),i386)
-LINUX_ARCH_PATH = $(LINUX_DIR)/arch/x86
-else ifeq ($(KERNEL_ARCH),x86_64)
-LINUX_ARCH_PATH = $(LINUX_DIR)/arch/x86
-else
-LINUX_ARCH_PATH = $(LINUX_DIR)/arch/$(KERNEL_ARCH)
 endif
 
 ifeq ($(BR2_LINUX_KERNEL_VMLINUX),y)
@@ -559,7 +565,7 @@ $(error No kernel configuration file specified, check your BR2_LINUX_KERNEL_CUST
 endif
 endif
 
-ifeq ($(BR2_LINUX_KERNEL_DTS_SUPPORT):$(strip $(LINUX_DTS_NAME)),y:)
+ifeq ($(BR2_LINUX_KERNEL_DTS_SUPPORT):$(strip $(BR2_LINUX_KERNEL_INTREE_DTS_NAME)$(BR2_LINUX_KERNEL_CUSTOM_DTS_PATH)),y:)
 $(error No kernel device tree source specified, check your \
 	BR2_LINUX_KERNEL_INTREE_DTS_NAME / BR2_LINUX_KERNEL_CUSTOM_DTS_PATH settings)
 endif
