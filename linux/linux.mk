@@ -179,8 +179,15 @@ LINUX_VERSION_PROBED = `MAKEFLAGS='$(filter-out w,$(MAKEFLAGS))' $(MAKE) $(LINUX
 # Because wildcards only work if files exist, please make sure LINUX_DTS_NAME
 # and its derivatives are only expanded in LINUX_BUILD_CMDS and LINUX_INSTALL_CMDS
 
+LINUX_INTREE_DTS_FULLPATH = \
+	$(foreach dts,$(call qstrip,$(BR2_LINUX_KERNEL_INTREE_DTS_NAME)), \
+		$(LINUX_ARCH_PATH)/boot/dts/$(dts).dts)
+
+# We don't want to omit unmatched patterns, we want them to fail compilation.
+# Therefore, we use shell expansion instead of $(wildcard)
+
 LINUX_DTS_NAME += \
-	$(foreach dts,$(filter %.dts,$(wildcard $(LINUX_ARCH_PATH)/boot/dts/$(call qstrip,$(BR2_LINUX_KERNEL_INTREE_DTS_NAME)))), \
+	$(foreach dts,$(shell echo $(LINUX_INTREE_DTS_FULLPATH)), \
 		$(call qstrip,$(subst $(LINUX_ARCH_PATH)/boot/dts/,,$(basename $(dts)))))
 
 
