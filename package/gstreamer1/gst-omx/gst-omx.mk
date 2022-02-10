@@ -21,7 +21,9 @@ GST_OMX_CONF_OPTS = \
 ifeq ($(BR2_PACKAGE_RPI_USERLAND),y)
 GST_OMX_VARIANT = rpi
 GST_OMX_CONF_OPTS += -Dheader_path=$(STAGING_DIR)/usr/include/IL
-else ifeq ($(BR2_PACKAGE_MALI_VPU_LIBS),y)
+else ifeq ($(BR2_PACKAGE_MCOM03_VPU_LIBS),y)
+GST_OMX_VARIANT = mcom03
+else ifeq ($(BR2_PACKAGE_MCOM03_VPU_LIBS_BIN),y)
 GST_OMX_VARIANT = mcom03
 else
 GST_OMX_VARIANT = generic
