@@ -8,6 +8,14 @@ config BR2_PACKAGE_LINUX_FIRMWARE
 
 if BR2_PACKAGE_LINUX_FIRMWARE
 
+config BR2_PACKAGE_LINUX_FIRMWARE_INSTALL_IMAGES
+	bool "Install firmware to images directory"
+	help
+	  Select if you want firmware files to be additionally
+	  installed to images directory. Select this if you have
+	  firmware that is loaded very early even before initramfs
+	  is mounted, such as Intel GPUs microcode firmware.
+
 menu "Audio firmware"
 
 config BR2_PACKAGE_LINUX_FIRMWARE_INTEL_SST_DSP
