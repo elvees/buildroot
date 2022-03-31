@@ -23,6 +23,7 @@ GST_OMX_VARIANT = rpi
 GST_OMX_CONF_OPTS += -Dheader_path=$(STAGING_DIR)/usr/include/IL
 else ifeq ($(BR2_PACKAGE_MCOM03_VPU_LIBS),y)
 GST_OMX_VARIANT = mcom03
+GST_OMX_CONF_OPTS += -Dheader_path=$(STAGING_DIR)/usr/include/IL
 else
 GST_OMX_VARIANT = generic
 endif
