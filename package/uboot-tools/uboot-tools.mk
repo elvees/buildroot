@@ -4,9 +4,9 @@
 #
 ################################################################################
 
-UBOOT_TOOLS_VERSION = 2021.07
-UBOOT_TOOLS_SOURCE = u-boot-$(UBOOT_TOOLS_VERSION).tar.bz2
-UBOOT_TOOLS_SITE = ftp://ftp.denx.de/pub/u-boot
+UBOOT_TOOLS_VERSION = mcom03
+UBOOT_TOOLS_SITE_METHOD = git
+UBOOT_TOOLS_SITE = ssh://gerrit.elvees.com:29418/bootloader/u-boot
 UBOOT_TOOLS_LICENSE = GPL-2.0+
 UBOOT_TOOLS_LICENSE_FILES = Licenses/gpl-2.0.txt
 UBOOT_TOOLS_CPE_ID_VENDOR = denx
@@ -70,6 +70,7 @@ define UBOOT_TOOLS_INSTALL_FWPRINTENV
 	$(INSTALL) -m 0755 -D $(@D)/tools/env/fw_printenv $(TARGET_DIR)/usr/sbin/fw_printenv
 	ln -sf fw_printenv $(TARGET_DIR)/usr/sbin/fw_setenv
 	$(INSTALL) -m 0755 -d $(TARGET_DIR)/var/lock
+	$(INSTALL) -m 0644 -D $(@D)/tools/env/mcom03_fw_env.config $(TARGET_DIR)/etc/fw_env.config
 endef
 endif
 
