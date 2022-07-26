@@ -1,0 +1,30 @@
+From 215003b58c9214c4a3ff5ef44f361887cdbec348 Mon Sep 17 00:00:00 2001
+From: Guillaume Picquet <nelstaar@yahoo.fr>
+Date: Mon, 9 Sep 2019 17:30:47 +0200
+Subject: [PATCH] Mitigated snprintf truncation warning (-wError)
+
+[Upstream: https://github.com/octo/liboping/pull/50/commits/664414123a3fe89984abfa0917946c513bf47164]
+Signed-off-by: Peter Seiderer <ps.report@gmx.net>
+---
+ src/liboping.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/liboping.c b/src/liboping.c
+index a2dfa19..39b0041 100644
+--- a/src/liboping.c
++++ b/src/liboping.c
+@@ -203,9 +203,9 @@ static char *sstrerror (int errnum, char *buf, size_t buflen)
+ static void ping_set_error (pingobj_t *obj, const char *function,
+ 	       	const char *message)
+ {
+-	snprintf (obj->errmsg, sizeof (obj->errmsg),
+-			"%s: %s", function, message);
+-	obj->errmsg[sizeof (obj->errmsg) - 1] = 0;
++	if (snprintf (obj->errmsg, sizeof (obj->errmsg),
++			"%s: %s", function, message) >= sizeof (obj->errmsg))
++		obj->errmsg[sizeof (obj->errmsg) - 1] = 0;
+ }
+ 
+ static void ping_set_errno (pingobj_t *obj, int error_number)
+--
+2.25.1
