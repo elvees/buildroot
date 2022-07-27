@@ -1073,7 +1073,13 @@ F:	package/python-beniget/
 F:	package/python-gast/
 F:	package/python-pybind/
 F:	package/python-pythran/
+F:	package/python-scipy/
 F:	package/reaver/
+F:	support/testing/tests/package/br2-external/python-pybind
+F:	support/testing/tests/package/sample_python_pybind.py
+F:	support/testing/tests/package/sample_python_scipy.py
+F:	support/testing/tests/package/test_python_pybind.py
+F:	support/testing/tests/package/test_python_scipy.py
 
 N:	Guo Ren <ren_guo@c-sky.com>
 F:	arch/Config.in.csky
@@ -1167,6 +1173,9 @@ F:	configs/orangepi_win_defconfig
 F:	configs/orangepi_zero_plus2_defconfig
 F:	configs/pine64_defconfig
 F:	configs/pine64_sopine_defconfig
+F:	package/python-scipy/
+F:	support/testing/tests/package/sample_python_scipy.py
+F:	support/testing/tests/package/test_python_scipy.py
 
 N:	James Hilliard <james.hilliard1@gmail.com>
 F:	package/apcupsd/
