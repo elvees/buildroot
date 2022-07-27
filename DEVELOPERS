@@ -1072,6 +1072,7 @@ F:	package/pixiewps/
 F:	package/python-beniget/
 F:	package/python-gast/
 F:	package/python-pybind/
+F:	package/python-pythran/
 F:	package/reaver/
 
 N:	Guo Ren <ren_guo@c-sky.com>
