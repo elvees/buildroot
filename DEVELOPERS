@@ -1069,6 +1069,7 @@ N:	Guillaume William Brs <guillaume.bressaix@gmail.com>
 F:	package/libnids/
 F:	package/liquid-dsp/
 F:	package/pixiewps/
+F:	package/python-beniget/
 F:	package/python-gast/
 F:	package/python-pybind/
 F:	package/reaver/
