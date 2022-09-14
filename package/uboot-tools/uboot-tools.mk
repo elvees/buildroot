@@ -70,13 +70,24 @@ define UBOOT_TOOLS_INSTALL_FWPRINTENV
 	$(INSTALL) -m 0755 -D $(@D)/tools/env/fw_printenv $(TARGET_DIR)/usr/sbin/fw_printenv
 	ln -sf fw_printenv $(TARGET_DIR)/usr/sbin/fw_setenv
 	$(INSTALL) -m 0755 -d $(TARGET_DIR)/var/lock
-	$(INSTALL) -m 0644 -D $(@D)/tools/env/mcom03_fw_env.config $(TARGET_DIR)/etc/fw_env.config
 endef
 endif
 
 ifeq ($(BR2_PACKAGE_UBOOT_TOOLS_DUMPIMAGE),y)
 define UBOOT_TOOLS_INSTALL_DUMPIMAGE
 	$(INSTALL) -m 0755 -D $(@D)/tools/dumpimage $(TARGET_DIR)/usr/sbin/dumpimage
+endef
+endif
+
+ifeq ($(BR2_PACKAGE_UBOOT_TOOLS_MCOM03_FW_UPDATE),y)
+define UBOOT_TOOLS_INSTALL_MCOM03_FW_UPDATE
+	$(INSTALL) -m 0755 -D $(@D)/tools/mcom03-fw-update.sh $(TARGET_DIR)/usr/sbin/mcom03-fw-update.sh
+endef
+endif
+
+ifneq ($(BR2_PACKAGE_UBOOT_TOOLS_FWPRINTENV)$(BR2_PACKAGE_UBOOT_TOOLS_MCOM03_FW_UPDATE),)
+define UBOOT_TOOLS_INSTALL_ENVIRONMENT_CONFIG
+	$(INSTALL) -m 0644 -D $(@D)/tools/env/mcom03_fw_env.config $(TARGET_DIR)/etc/fw_env.config
 endef
 endif
 
@@ -90,6 +101,8 @@ define UBOOT_TOOLS_INSTALL_TARGET_CMDS
 	$(UBOOT_TOOLS_INSTALL_MKENVIMAGE)
 	$(UBOOT_TOOLS_INSTALL_FWPRINTENV)
 	$(UBOOT_TOOLS_INSTALL_DUMPIMAGE)
+	$(UBOOT_TOOLS_INSTALL_MCOM03_FW_UPDATE)
+	$(UBOOT_TOOLS_INSTALL_ENVIRONMENT_CONFIG)
 	$(UBOOT_TOOLS_INSTALL_FIT_CHECK_SIGN)
 endef
 
