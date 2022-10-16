@@ -988,13 +988,27 @@ else
 #  depends
 #  configure
 
+$(1)-depends:		$$($(2)_FINAL_DEPENDENCIES)
+
+# BR2_RSYNC_APPLY_PATCHES forces patches to be applied even for packages
+# with overriden sources.
+ifneq ($(BR2_RSYNC_APPLY_PATCHES),)
+$$($(2)_TARGET_CONFIGURE): $$($(2)_TARGET_PATCH)
+
+# Use an order-only dependency so the "<pkg>-clean-for-rebuild" rule
+# can remove the stamp file without triggering the patch step.
+$$($(2)_TARGET_PATCH): | $$($(2)_TARGET_RSYNC)
+$(1)-patch:		$$($(2)_TARGET_PATCH)
+# Order-only dependency
+$$($(2)_TARGET_PATCH): | $$(patsubst %,%-patch,$$($(2)_FINAL_PATCH_DEPENDENCIES))
+else
 # Use an order-only dependency so the "<pkg>-clean-for-rebuild" rule
 # can remove the stamp file without triggering the configure step.
 $$($(2)_TARGET_CONFIGURE): | $$($(2)_TARGET_RSYNC)
 
-$(1)-depends:		$$($(2)_FINAL_DEPENDENCIES)
-
 $(1)-patch:		$(1)-rsync
+endif
+
 $(1)-extract:		$(1)-rsync
 
 $(1)-rsync:		$$($(2)_TARGET_RSYNC)
