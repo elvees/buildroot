@@ -17,11 +17,18 @@ UBOOT_TOOLS_INSTALL_STAGING = YES
 UBOOT_TOOLS_DEPENDENCIES = $(BR2_MAKE_HOST_DEPENDENCY)
 HOST_UBOOT_TOOLS_DEPENDENCIES = $(BR2_MAKE_HOST_DEPENDENCY)
 
+# tools from now on implicitly in need of openssl
+UBOOT_TOOLS_DEPENDENCIES += openssl host-pkgconf
+HOST_UBOOT_TOOLS_DEPENDENCIES += host-openssl
+
 define UBOOT_TOOLS_CONFIGURE_CMDS
 	mkdir -p $(@D)/include/config
 	touch $(@D)/include/config/auto.conf
 	mkdir -p $(@D)/include/generated
 	touch $(@D)/include/generated/autoconf.h
+	echo '#define CONFIG_FIT_SIGNATURE 1' >> $(@D)/include/generated/autoconf.h
+	echo '#define CONFIG_FIT_CIPHER 1' >> $(@D)/include/generated/autoconf.h
+	echo '#define CONFIG_TOOLS_FIT_RSASSA_PSS 1' >> $(@D)/include/generated/autoconf.h
 endef
 
 UBOOT_TOOLS_MAKE_OPTS = CROSS_COMPILE="$(TARGET_CROSS)" \
@@ -36,8 +43,7 @@ UBOOT_TOOLS_DEPENDENCIES += dtc
 endif
 
 ifeq ($(BR2_PACKAGE_UBOOT_TOOLS_FIT_SIGNATURE_SUPPORT),y)
-UBOOT_TOOLS_MAKE_OPTS += CONFIG_FIT_SIGNATURE=y CONFIG_FIT_SIGNATURE_MAX_SIZE=0x10000000
-UBOOT_TOOLS_DEPENDENCIES += openssl host-pkgconf
+UBOOT_TOOLS_MAKE_OPTS += CONFIG_FIT_SIGNATURE=y
 endif
 
 ifeq ($(BR2_PACKAGE_UBOOT_TOOLS_FIT_CHECK_SIGN),y)
@@ -48,7 +54,7 @@ endif
 
 define UBOOT_TOOLS_BUILD_CMDS
 	$(TARGET_MAKE_ENV) $(BR2_MAKE) -C $(@D) $(UBOOT_TOOLS_MAKE_OPTS) \
-		CROSS_BUILD_TOOLS=y tools-only
+		CROSS_BUILD_TOOLS=y CONFIG_TOOLS_LIBCRYPTO=y tools-only
 	$(TARGET_MAKE_ENV) $(BR2_MAKE) -C $(@D) $(UBOOT_TOOLS_MAKE_OPTS) \
 		envtools no-dot-config-targets=envtools
 endef
@@ -113,6 +119,9 @@ define HOST_UBOOT_TOOLS_CONFIGURE_CMDS
 	touch $(@D)/include/config/auto.conf
 	mkdir -p $(@D)/include/generated
 	touch $(@D)/include/generated/autoconf.h
+	echo '#define CONFIG_FIT_SIGNATURE 1' >> $(@D)/include/generated/autoconf.h
+	echo '#define CONFIG_FIT_CIPHER 1' >> $(@D)/include/generated/autoconf.h
+	echo '#define CONFIG_TOOLS_FIT_RSASSA_PSS 1' >> $(@D)/include/generated/autoconf.h
 endef
 
 HOST_UBOOT_TOOLS_MAKE_OPTS = HOSTCC="$(HOSTCC)" \
@@ -125,8 +134,7 @@ HOST_UBOOT_TOOLS_DEPENDENCIES += host-dtc
 endif
 
 ifeq ($(BR2_PACKAGE_HOST_UBOOT_TOOLS_FIT_SIGNATURE_SUPPORT),y)
-HOST_UBOOT_TOOLS_MAKE_OPTS += CONFIG_FIT_SIGNATURE=y CONFIG_FIT_SIGNATURE_MAX_SIZE=0x10000000
-HOST_UBOOT_TOOLS_DEPENDENCIES += host-openssl
+HOST_UBOOT_TOOLS_MAKE_OPTS += CONFIG_FIT_SIGNATURE=y
 endif
 
 ifeq ($(BR2_PACKAGE_HOST_UBOOT_TOOLS_ENVIMAGE),y)
@@ -201,7 +209,7 @@ endef
 endif #BR2_PACKAGE_HOST_UBOOT_TOOLS_BOOT_SCRIPT
 
 define HOST_UBOOT_TOOLS_BUILD_CMDS
-	$(BR2_MAKE1) -C $(@D) $(HOST_UBOOT_TOOLS_MAKE_OPTS) tools-only
+	$(BR2_MAKE1) -C $(@D) $(HOST_UBOOT_TOOLS_MAKE_OPTS) CONFIG_TOOLS_LIBCRYPTO=y tools-only
 	$(HOST_UBOOT_TOOLS_GENERATE_ENVIMAGE)
 	$(HOST_UBOOT_TOOLS_GENERATE_BOOT_SCRIPT)
 endef

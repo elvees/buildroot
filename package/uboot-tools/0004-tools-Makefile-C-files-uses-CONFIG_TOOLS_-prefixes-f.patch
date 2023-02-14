@@ -1,0 +1,37 @@
+From 672499cef56556dcaf41cf1a6c4db5d37c19066f Mon Sep 17 00:00:00 2001
+From: Omar Al-Wadi <oalwadi@elvees.com>
+Date: Wed, 15 Feb 2023 14:52:07 +0300
+Subject: [PATCH] tools: Makefile: C files uses CONFIG_TOOLS_ prefixes for
+ configs
+
+According to commit [1], the required prefix for checked configs in *.c
+and *.h files is `CONFIG_TOOLS_`.
+
+[1] https://github.com/u-boot/u-boot/commit/5500a408dd81d5e5718a0fcd98ce55586d125853
+
+Change-Id: Idb8ea730b0c07503d4a41423d790f810cd70d21b
+Signed-off-by: Omar Al-Wadi <oalwadi@elvees.com>
+---
+ tools/Makefile | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/tools/Makefile b/tools/Makefile
+index 3626919633..e205fe433e 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -166,9 +166,9 @@ endif
+ ifdef CONFIG_TOOLS_LIBCRYPTO
+ # This affects include/image.h, but including the board config file
+ # is tricky, so manually define this options here.
+-HOST_EXTRACFLAGS	+= -DCONFIG_FIT_SIGNATURE
+-HOST_EXTRACFLAGS	+= -DCONFIG_FIT_SIGNATURE_MAX_SIZE=0xffffffff
+-HOST_EXTRACFLAGS	+= -DCONFIG_FIT_CIPHER
++HOST_EXTRACFLAGS	+= -DCONFIG_TOOLS_FIT_SIGNATURE
++HOST_EXTRACFLAGS	+= -DCONFIG_TOOLS_FIT_SIGNATURE_MAX_SIZE=0xffffffff
++HOST_EXTRACFLAGS	+= -DCONFIG_TOOLS_FIT_CIPHER
+ endif
+ 
+ # MXSImage needs LibSSL
+-- 
+2.29.2
+
