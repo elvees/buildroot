@@ -1,0 +1,33 @@
+From 9af80fbfe71fc7d42f42c549aa0d3f5e29203106 Mon Sep 17 00:00:00 2001
+From: Georgy Macharadze <gmacharadze@elvees.com>
+Date: Mon, 13 Mar 2023 12:09:25 +0300
+Subject: [PATCH] Add support for M420 pixel format
+
+Change-Id: I7bf9c267538b67f53f21cc6a56ce8e469351da23
+---
+ gst-libs/gst/video/video-format.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/gst-libs/gst/video/video-format.h b/gst-libs/gst/video/video-format.h
+index bebfceaeb..5cefb5232 100644
+--- a/gst-libs/gst/video/video-format.h
++++ b/gst-libs/gst/video/video-format.h
+@@ -131,6 +131,7 @@ G_BEGIN_DECLS
+  * @GST_VIDEO_FORMAT_Y412_LE: packed 4:4:4:4 YUV, 12 bits per channel(U-Y-V-A...) (Since: 1.18)
+  * @GST_VIDEO_FORMAT_NV12_4L4: NV12 with 4x4 tiles in linear order (Since: 1.18)
+  * @GST_VIDEO_FORMAT_NV12_32L32: NV12 with 32x32 tiles in linear order (Since: 1.18)
++ * @GST_VIDEO_FORMAT_M420: Format with 1/2 horizontal and vertical chroma resolution, also known as YUV 4:2:0. Hybrid plane line-interleaved layout (Since: 1.16.2)
+  *
+  * Enum value describing the most common video formats.
+  *
+@@ -251,6 +252,7 @@ typedef enum {
+    * Since: 1.18
+    */
+   GST_VIDEO_FORMAT_NV12_32L32,
++  GST_VIDEO_FORMAT_M420,
+ 
+ } GstVideoFormat;
+ 
+-- 
+2.31.1
+
