@@ -1,0 +1,42 @@
+From 522e25e49795db362e04d08e44ddb5fc576aa486 Mon Sep 17 00:00:00 2001
+From: Denis Ovchinnikov <dovchinnikov@elvees.com>
+Date: Fri, 24 Mar 2023 13:09:27 +0300
+Subject: [PATCH] gallium: kmsro: Add vpout-drm entry point
+
+vpout-drm is ELVEES MCom-02 display controller.
+
+Issue: #MCOM02SW-2128
+Upstream: None
+Signed-off-by: Denis Ovchinnikov <dovchinnikov@elvees.com>
+---
+ src/gallium/targets/dri/meson.build | 1 +
+ src/gallium/targets/dri/target.c    | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/src/gallium/targets/dri/meson.build b/src/gallium/targets/dri/meson.build
+index 8da21b3..b5a6082 100644
+--- a/src/gallium/targets/dri/meson.build
++++ b/src/gallium/targets/dri/meson.build
+@@ -84,6 +84,7 @@ foreach d : [[with_gallium_kmsro, [
+                'st7586_dri.so',
+                'st7735r_dri.so',
+                'stm_dri.so',
++               'vpout-drm_dri.so',
+ 	       'sun4i-drm_dri.so',
+              ]],
+              [with_gallium_radeonsi, 'radeonsi_dri.so'],
+diff --git a/src/gallium/targets/dri/target.c b/src/gallium/targets/dri/target.c
+index f71f690..4387f7f 100644
+--- a/src/gallium/targets/dri/target.c
++++ b/src/gallium/targets/dri/target.c
+@@ -110,6 +110,7 @@ DEFINE_LOADER_DRM_ENTRYPOINT(st7586)
+ DEFINE_LOADER_DRM_ENTRYPOINT(st7735r)
+ DEFINE_LOADER_DRM_ENTRYPOINT(stm)
+ DEFINE_LOADER_DRM_ENTRYPOINT(sun4i_drm)
++DEFINE_LOADER_DRM_ENTRYPOINT(vpout_drm)
+ #endif
+ 
+ #if defined(GALLIUM_LIMA)
+-- 
+2.31.1
+
