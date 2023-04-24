@@ -352,6 +352,8 @@ define UBOOT_BUILD_OMAP_IFT
 		-c $(call qstrip,$(BR2_TARGET_UBOOT_OMAP_IFT_CONFIG))
 endef
 
+UBOOT_INSTALL_DTB_PATH = $(BINARIES_DIR)/$(BR2_TARGET_UBOOT_INSTALL_DTB_SUBDIR)
+
 define UBOOT_INSTALL_IMAGES_CMDS
 	$(foreach f,$(UBOOT_BINS), \
 			cp -dpf $(@D)/$(f) $(BINARIES_DIR)/
@@ -362,6 +364,10 @@ define UBOOT_INSTALL_IMAGES_CMDS
 		$(foreach f,$(call qstrip,$(BR2_TARGET_UBOOT_SPL_NAME)), \
 			cp -dpf $(@D)/$(f) $(BINARIES_DIR)/
 		)
+	)
+	$(if $(BR2_TARGET_UBOOT_INSTALL_DTB),
+		mkdir -p $(UBOOT_INSTALL_DTB_PATH) && \
+		cp $(@D)/arch/*/dts/*.dtb $(UBOOT_INSTALL_DTB_PATH)/
 	)
 endef
 

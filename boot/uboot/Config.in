@@ -446,6 +446,17 @@ config BR2_TARGET_UBOOT_SPL_NAME
 	  and TPL name is tpl/u-boot-tpl.bin but not always. SPL name is
 	  MLO on OMAP and SPL on i.MX6 for example.
 
+config BR2_TARGET_UBOOT_INSTALL_DTB
+	bool "Install DTB"
+	help
+	  Check this to install all compiled DTBs, not only default one
+
+config BR2_TARGET_UBOOT_INSTALL_DTB_SUBDIR
+	string "DTB installation subdirectory"
+	depends on BR2_TARGET_UBOOT_INSTALL_DTB
+	help
+	  A name of subdirectory inside images directory to install DTBs
+
 config BR2_TARGET_UBOOT_ZYNQ_IMAGE
 	bool "Generate image for Xilinx Zynq"
 	depends on BR2_arm
