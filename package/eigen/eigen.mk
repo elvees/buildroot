@@ -4,8 +4,7 @@
 #
 ################################################################################
 
-EIGEN_VERSION = 3.3.7
-EIGEN_SOURCE = eigen-$(EIGEN_VERSION).tar.bz2
+EIGEN_VERSION = 3460f3558e7b469efb8a225894e21929c8c77629
 EIGEN_SITE = $(call gitlab,libeigen,eigen,$(EIGEN_VERSION))
 EIGEN_LICENSE = MPL2, BSD-3-Clause, LGPL-2.1
 EIGEN_LICENSE_FILES = COPYING.MPL2 COPYING.BSD COPYING.LGPL COPYING.README
