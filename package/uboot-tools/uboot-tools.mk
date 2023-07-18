@@ -87,7 +87,7 @@ endif
 
 ifeq ($(BR2_PACKAGE_UBOOT_TOOLS_MCOM03_UTILS),y)
 define UBOOT_TOOLS_INSTALL_MCOM03_UTILS
-	$(INSTALL) -m 0755 -D $(@D)/tools/mcom03-fw-update.sh $(TARGET_DIR)/usr/sbin/mcom03-fw-update.sh
+	$(INSTALL) -m 0755 -D $(@D)/tools/mcom03-*.sh -t $(TARGET_DIR)/usr/sbin
 endef
 endif
 
