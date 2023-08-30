@@ -14,7 +14,17 @@ EIGEN_SUPPORTS_IN_SOURCE_BUILD = NO
 
 # Default Eigen CMake installs .pc file in /usr/share/pkgconfig
 # change it to /usr/lib/pkgconfig, to be consistent with other packages.
-EIGEN_CONF_OPTS = -DPKGCONFIG_INSTALL_DIR=/usr/lib/pkgconfig \
-	-DCMAKE_Fortran_COMPILER=$(TARGET_FC)
+EIGEN_CONF_OPTS = -DPKGCONFIG_INSTALL_DIR=/usr/lib/pkgconfig
+
+ifeq ($(BR2_TOOLCHAIN_HAS_FORTRAN),y)
+EIGEN_CONF_OPTS += \
+	-DCMAKE_Fortran_COMPILER=$(TARGET_FC) \
+	-DEIGEN_BUILD_BLAS=ON \
+	-DEIGEN_BUILD_LAPACK=ON
+else
+EIGEN_CONF_OPTS += \
+	-DEIGEN_BUILD_BLAS=OFF \
+	-DEIGEN_BUILD_LAPACK=OFF
+endif
 
 $(eval $(cmake-package))

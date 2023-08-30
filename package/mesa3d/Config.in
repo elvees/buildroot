@@ -46,6 +46,13 @@ config BR2_PACKAGE_MESA3D_NEEDS_XA
 
 comment "Gallium drivers"
 
+config BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_CROCUS
+	bool "Gallium crocus driver"
+	depends on BR2_i386 || BR2_x86_64
+	select BR2_PACKAGE_MESA3D_GALLIUM_DRIVER
+	help
+	  Mesa driver for gen4-7 Intel GPUs.
+
 config BR2_PACKAGE_MESA3D_GALLIUM_DRIVER_ETNAVIV
 	bool "Gallium Etnaviv driver"
 	depends on BR2_arm
@@ -185,7 +192,9 @@ comment "Additional API Support"
 
 config BR2_PACKAGE_MESA3D_OPENGL_EGL
 	bool "OpenGL EGL"
-	select BR2_PACKAGE_HAS_LIBEGL
+	depends on BR2_PACKAGE_MESA3D_GALLIUM_DRIVER
+	select BR2_PACKAGE_HAS_LIBEGL if !BR2_PACKAGE_LIBGLVND
+	select BR2_PACKAGE_LIBGLVND_DISPATCH_EGL if BR2_PACKAGE_LIBGLVND
 	select BR2_PACKAGE_HAS_LIBEGL_WAYLAND
 	help
 	  Use the Khronos EGL APIs. EGL is a window manager for OpenGL applications
@@ -193,7 +202,8 @@ config BR2_PACKAGE_MESA3D_OPENGL_EGL
 
 config BR2_PACKAGE_MESA3D_OPENGL_ES
 	bool "OpenGL ES"
-	select BR2_PACKAGE_HAS_LIBGLES
+	select BR2_PACKAGE_HAS_LIBGLES if !BR2_PACKAGE_LIBGLVND
+	select BR2_PACKAGE_LIBGLVND_DISPATCH_GLES if BR2_PACKAGE_LIBGLVND
 	help
 	  Use the Khronos OpenGL ES APIs. This is commonly used on embedded
 	  systems and represents a subset of the OpenGL API.
@@ -227,14 +237,14 @@ config BR2_PACKAGE_PROVIDES_LIBGL
 	default "mesa3d" if BR2_PACKAGE_XORG7
 
 config BR2_PACKAGE_PROVIDES_LIBEGL
-	default "mesa3d" if BR2_PACKAGE_MESA3D_OPENGL_EGL
+	default "mesa3d" if BR2_PACKAGE_MESA3D_OPENGL_EGL && !BR2_PACKAGE_LIBGLVND
 
 config BR2_PACKAGE_PROVIDES_LIBGLES
-	default "mesa3d" if BR2_PACKAGE_MESA3D_OPENGL_ES
+	default "mesa3d" if BR2_PACKAGE_MESA3D_OPENGL_ES && !BR2_PACKAGE_LIBGLVND
 
 endif # BR2_PACKAGE_MESA3D
 
-comment "mesa3d needs a toolchain w/ C++, NPTL, dynamic library"
+comment "mesa3d needs a toolchain w/ gcc >=8, C++, NPTL, dynamic library"
 	depends on !BR2_INSTALL_LIBSTDCPP || !BR2_TOOLCHAIN_HAS_THREADS_NPTL || \
-		BR2_STATIC_LIBS
+		BR2_STATIC_LIBS || !BR2_TOOLCHAIN_GCC_AT_LEAST_8
 	depends on BR2_TOOLCHAIN_HAS_SYNC_1
