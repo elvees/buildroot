@@ -4,9 +4,11 @@
 #
 ################################################################################
 
-GST_OMX_VERSION = 1.22.2
-GST_OMX_SOURCE = gst-omx-$(GST_OMX_VERSION).tar.xz
-GST_OMX_SITE = https://gstreamer.freedesktop.org/src/gst-omx
+GST_OMX_VERSION = mcom03-1.18.y
+# TODO: Use monorepository ssh://gerrit.elvees.com:29418/lib/gstreamer after MCOM03SW-2542
+GST_OMX_SITE = ssh://gerrit.elvees.com:29418/lib/gst-omx
+GST_OMX_SITE_METHOD = git
+GST_OMX_GIT_SUBMODULES = YES
 
 GST_OMX_LICENSE = LGPL-2.1
 GST_OMX_LICENSE_FILES = COPYING
