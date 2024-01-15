@@ -1,0 +1,33 @@
+From d30fef9c5c73d3fa2bda248b87441acb73aaaa8f Mon Sep 17 00:00:00 2001
+From: Mikhail Konovalov <mkonovalov@elvees.com>
+Date: Mon, 15 Jan 2024 14:11:45 +0300
+Subject: [PATCH] tools: Makefile: Enable SHA256 hash algorithm
+
+To properly support signed FIT images it is required to enable SHA256
+hash algorithm.
+
+Issue: #IPCAMSW-3917
+Upstream: N/A (there are no working upstream patches)
+Change-Id: I47f6ca19ee0f7b6070e15cb4cec8d1e8cc94b6ec
+Signed-off-by: Mikhail Konovalov <mkonovalov@elvees.com>
+---
+ tools/Makefile | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/tools/Makefile b/tools/Makefile
+index 58383a4e7c..bdccceaf70 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -167,6 +167,9 @@ HOST_EXTRACFLAGS	+= -DCONFIG_TOOLS_FIT_SIGNATURE
+ HOST_EXTRACFLAGS	+= -DCONFIG_TOOLS_FIT_SIGNATURE_MAX_SIZE=0xffffffff
+ HOST_EXTRACFLAGS	+= -DCONFIG_TOOLS_FIT_CIPHER
+ HOST_EXTRACFLAGS	+= -DCONFIG_TOOLS_FIT_RSASSA_PSS
++ifdef CONFIG_TOOLS_SHA256
++HOST_EXTRACFLAGS	+= -DCONFIG_TOOLS_SHA256
++endif
+ endif
+ 
+ # MXSImage needs LibSSL
+-- 
+2.39.1
+

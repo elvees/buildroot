@@ -29,6 +29,7 @@ define UBOOT_TOOLS_CONFIGURE_CMDS
 	echo '#define CONFIG_FIT_SIGNATURE 1' >> $(@D)/include/generated/autoconf.h
 	echo '#define CONFIG_FIT_CIPHER 1' >> $(@D)/include/generated/autoconf.h
 	echo $(if $(BR2_PACKAGE_UBOOT_TOOLS_FIT_SUPPORT),'#define CONFIG_FIT_RSASSA_PSS 1') >> $(@D)/include/generated/autoconf.h
+	echo $(if $(BR2_PACKAGE_UBOOT_TOOLS_FIT_SUPPORT),'#define CONFIG_SH256 1') >> $(@D)/include/generated/autoconf.h
 	echo $(if $(BR2_PACKAGE_UBOOT_TOOLS_FIT_SUPPORT),'#define CONFIG_FIT_PRINT 1') >> $(@D)/include/generated/autoconf.h
 	mkdir -p $(@D)/include/asm
 	touch $(@D)/include/asm/linkage.h
@@ -136,6 +137,7 @@ define HOST_UBOOT_TOOLS_CONFIGURE_CMDS
 	echo '#define CONFIG_FIT_SIGNATURE 1' >> $(@D)/include/generated/autoconf.h
 	echo '#define CONFIG_FIT_CIPHER 1' >> $(@D)/include/generated/autoconf.h
 	echo $(if $(BR2_PACKAGE_HOST_UBOOT_TOOLS_FIT_SUPPORT),'#define CONFIG_FIT_RSASSA_PSS 1') >> $(@D)/include/generated/autoconf.h
+	echo $(if $(BR2_PACKAGE_HOST_UBOOT_TOOLS_FIT_SUPPORT),'#define CONFIG_SH256 1') >> $(@D)/include/generated/autoconf.h
 	echo $(if $(BR2_PACKAGE_HOST_UBOOT_TOOLS_FIT_SUPPORT),'#define CONFIG_FIT_PRINT 1') >> $(@D)/include/generated/autoconf.h
 	mkdir -p $(@D)/include/asm
 	touch $(@D)/include/asm/linkage.h
@@ -227,7 +229,8 @@ endef
 endif #BR2_PACKAGE_HOST_UBOOT_TOOLS_BOOT_SCRIPT
 
 define HOST_UBOOT_TOOLS_BUILD_CMDS
-	$(BR2_MAKE1) -C $(@D) $(HOST_UBOOT_TOOLS_MAKE_OPTS) CONFIG_TOOLS_LIBCRYPTO=y tools-only
+	$(BR2_MAKE1) -C $(@D) $(HOST_UBOOT_TOOLS_MAKE_OPTS) CONFIG_TOOLS_LIBCRYPTO=y \
+		CONFIG_TOOLS_SHA256=y tools-only
 	$(BR2_MAKE1) -C $(@D) $(HOST_UBOOT_TOOLS_MAKE_OPTS) envtools no-dot-config-targets=envtools
 	$(HOST_UBOOT_TOOLS_GENERATE_ENVIMAGE)
 	$(HOST_UBOOT_TOOLS_GENERATE_BOOT_SCRIPT)
