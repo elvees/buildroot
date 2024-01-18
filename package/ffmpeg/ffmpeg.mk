@@ -281,10 +281,15 @@ else
 FFMPEG_CONF_OPTS += --disable-vdpau
 endif
 
-ifeq ($(BR2_PACKAGE_RPI_USERLAND),y)
-FFMPEG_CONF_OPTS += --enable-mmal --enable-omx --enable-omx-rpi \
+ifeq ($(BR2_PACKAGE_HAS_LIBOPENMAX),y)
+FFMPEG_CONF_OPTS += --enable-omx \
 	--extra-cflags=-I$(STAGING_DIR)/usr/include/IL
-FFMPEG_DEPENDENCIES += rpi-userland
+FFMPEG_DEPENDENCIES += libopenmax
+ifeq ($(BR2_PACKAGE_RPI_USERLAND),y)
+FFMPEG_CONF_OPTS += --enable-mmal --enable-omx-rpi
+else
+FFMPEG_CONF_OPTS += --disable-mmal --disable-omx-rpi
+endif
 else
 FFMPEG_CONF_OPTS += --disable-mmal --disable-omx --disable-omx-rpi
 endif
