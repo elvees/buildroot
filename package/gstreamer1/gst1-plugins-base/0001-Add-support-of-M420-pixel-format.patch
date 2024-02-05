@@ -1,0 +1,52 @@
+From 6089bf4a8273852a00ec4850228b399fcf706657 Mon Sep 17 00:00:00 2001
+From: Georgy Macharadze <gmacharadze@elvees.com>
+Date: Tue, 6 Feb 2024 14:16:44 +0300
+Subject: [PATCH] Add support of M420 pixel format
+
+CellMotionDetector in lib/gst-plugins-cv requires
+M420 format support despite the fact it is needed only in
+ECAM02DM devices.
+
+The commit is temporary workaround which applies patch with M420
+pixel format support in GStreamer. The patch should be removed
+when CellMotionDetector is fixed.
+
+Upstream: N/A
+Issue: #IPCAMSW-4167
+Signed-off-by: Georgy Macharadze <gmacharadze@elvees.com>
+---
+ gst-libs/gst/video/video-format.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/gst-libs/gst/video/video-format.h b/gst-libs/gst/video/video-format.h
+index 7a645cc..93591c7 100644
+--- a/gst-libs/gst/video/video-format.h
++++ b/gst-libs/gst/video/video-format.h
+@@ -145,6 +145,7 @@ G_BEGIN_DECLS
+  * @GST_VIDEO_FORMAT_NV12_16L32S: NV12 with 16x32 Y tiles and 16x16 UV tiles. (Since: 1.22)
+  * @GST_VIDEO_FORMAT_NV12_8L128 : NV12 with 8x128 tiles in linear order (Since: 1.22)
+  * @GST_VIDEO_FORMAT_NV12_10BE_8L128 : NV12 10bit big endian with 8x128 tiles in linear order (Since: 1.22)
++ * @GST_VIDEO_FORMAT_M420: Format with 1/2 horizontal and vertical chroma resolution, also known as YUV 4:2:0. Hybrid plane line-interleaved layout (Since: 1.16.2)
+  *
+  * Enum value describing the most common video formats.
+  *
+@@ -400,6 +401,16 @@ typedef enum {
+    * Since: 1.22
+    */
+   GST_VIDEO_FORMAT_NV12_10BE_8L128,
++
++  /**
++   * GST_VIDEO_FORMAT_M420:
++   *
++   * Format with 1/2 horizontal and vertical chroma resolution,
++   * also known as YUV 4:2:0. Hybrid plane line-interleaved layout.
++   *
++   * Since: 1.16.2
++   */
++  GST_VIDEO_FORMAT_M420,
+ } GstVideoFormat;
+ 
+ #define GST_VIDEO_MAX_PLANES 4
+-- 
+2.43.0
+
