@@ -17,7 +17,8 @@ menuconfig BR2_PACKAGE_MESA3D
 	select BR2_PACKAGE_XLIB_LIBXFIXES if BR2_PACKAGE_XORG7
 	select BR2_PACKAGE_LIBXCB if BR2_PACKAGE_XORG7
 	help
-	  Mesa 3D, an open-source implementation of the OpenGL specification.
+	  Mesa 3D, an open-source implementation of the OpenGL
+	  specification.
 
 	  http://mesa3d.org
 
@@ -155,10 +156,10 @@ config BR2_PACKAGE_MESA3D_DRI_DRIVER_RADEON
 
 config BR2_PACKAGE_MESA3D_DRI_DRIVER_PVR
 	bool "DRI PVR driver"
-	select BR2_PACKAGE_MESA3D_DRI_DRIVER
 	depends on BR2_PACKAGE_MCOM03_ROGUE_LIBS
+	select BR2_PACKAGE_MESA3D_DRI_DRIVER
 	help
-	  Legacy Radeon driver for R100 series GPUs.
+	  Support for MCom-03 PowerVR GPU driver.
 
 comment "Vulkan drivers"
 
@@ -184,7 +185,8 @@ comment "Off-screen Rendering"
 config BR2_PACKAGE_MESA3D_OSMESA
 	bool "OSMesa library"
 	help
-	  The OSMesa API provides functions for making off-screen renderings.
+	  The OSMesa API provides functions for making off-screen
+	  renderings.
 
 if BR2_PACKAGE_MESA3D_DRIVER
 
@@ -197,16 +199,16 @@ config BR2_PACKAGE_MESA3D_OPENGL_EGL
 	select BR2_PACKAGE_LIBGLVND_DISPATCH_EGL if BR2_PACKAGE_LIBGLVND
 	select BR2_PACKAGE_HAS_LIBEGL_WAYLAND
 	help
-	  Use the Khronos EGL APIs. EGL is a window manager for OpenGL applications
-	  similar to GLX, for X, and WGL, for Windows.
+	  Use the Khronos EGL APIs. EGL is a window manager for OpenGL
+	  applications similar to GLX, for X, and WGL, for Windows.
 
 config BR2_PACKAGE_MESA3D_OPENGL_ES
 	bool "OpenGL ES"
 	select BR2_PACKAGE_HAS_LIBGLES if !BR2_PACKAGE_LIBGLVND
 	select BR2_PACKAGE_LIBGLVND_DISPATCH_GLES if BR2_PACKAGE_LIBGLVND
 	help
-	  Use the Khronos OpenGL ES APIs. This is commonly used on embedded
-	  systems and represents a subset of the OpenGL API.
+	  Use the Khronos OpenGL ES APIs. This is commonly used on
+	  embedded systems and represents a subset of the OpenGL API.
 
 config BR2_PACKAGE_MESA3D_OPENGL_TEXTURE_FLOAT
 	bool "OpenGL texture float (patented format)"
