@@ -19,7 +19,7 @@ HOST_UBOOT_TOOLS_DEPENDENCIES = $(BR2_MAKE_HOST_DEPENDENCY)
 
 # tools from now on implicitly in need of openssl
 UBOOT_TOOLS_DEPENDENCIES += openssl host-pkgconf
-HOST_UBOOT_TOOLS_DEPENDENCIES += host-openssl host-gnutls
+HOST_UBOOT_TOOLS_DEPENDENCIES += host-openssl host-gnutls host-util-linux
 
 define UBOOT_TOOLS_CONFIGURE_CMDS
 	mkdir -p $(@D)/include/config
