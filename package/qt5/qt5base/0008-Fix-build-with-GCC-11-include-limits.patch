@@ -1,0 +1,57 @@
+From e0c0bfb56de151fe93dded70cea605f5b2a710f6 Mon Sep 17 00:00:00 2001
+From: Maksim Tarelov <mtarelov@elvees.com>
+Date: Wed, 21 Feb 2024 09:55:48 +0300
+Subject: [PATCH] Fixes build with GCC 11: include <limits>
+
+Patch based on following issues:
+QTBUG-90395
+QTBUG-89977
+
+Signed-off-by: Maksim Tarelov <mtarelov@elvees.com>
+---
+ src/corelib/global/qendian.h         | 2 ++
+ src/corelib/global/qfloat16.h        | 1 +
+ src/corelib/text/qbytearraymatcher.h | 2 ++
+ 3 files changed, 5 insertions(+)
+
+diff --git a/src/corelib/global/qendian.h b/src/corelib/global/qendian.h
+index 257efbb..a97776c 100644
+--- a/src/corelib/global/qendian.h
++++ b/src/corelib/global/qendian.h
+@@ -44,6 +44,8 @@
+ #include <QtCore/qfloat16.h>
+ #include <QtCore/qglobal.h>
+ 
++#include <limits>
++
+ // include stdlib.h and hope that it defines __GLIBC__ for glibc-based systems
+ #include <stdlib.h>
+ #include <string.h>
+diff --git a/src/corelib/global/qfloat16.h b/src/corelib/global/qfloat16.h
+index f35eefd..b2a0916 100644
+--- a/src/corelib/global/qfloat16.h
++++ b/src/corelib/global/qfloat16.h
+@@ -43,6 +43,7 @@
+ 
+ #include <QtCore/qglobal.h>
+ #include <QtCore/qmetatype.h>
++#include <limits>
+ #include <string.h>
+ 
+ #if defined(QT_COMPILER_SUPPORTS_F16C) && defined(__AVX2__) && !defined(__F16C__)
+diff --git a/src/corelib/text/qbytearraymatcher.h b/src/corelib/text/qbytearraymatcher.h
+index 0eedfc1..f5f9bef 100644
+--- a/src/corelib/text/qbytearraymatcher.h
++++ b/src/corelib/text/qbytearraymatcher.h
+@@ -42,6 +42,8 @@
+ 
+ #include <QtCore/qbytearray.h>
+ 
++#include <limits>
++
+ QT_BEGIN_NAMESPACE
+ 
+ 
+-- 
+2.39.1
+
