@@ -1,0 +1,524 @@
+From 1b0266e782ec5ac216e964052a2174fccdcd0c3c Mon Sep 17 00:00:00 2001
+From: Ilya Orazov <ilordash02@gmail.com>
+Date: Tue, 21 Nov 2023 14:06:36 +0300
+Subject: [PATCH] Add support for DELAY_REQ and SYNC packets RX filters
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+I’m using an Ethernet controller with PTP support, which requires
+determining which PTP packets on RX must be timestamped: SYNC or
+DELAY_REQ, based on whether the device is Slave or Master respectively.
+So I can’t use the EVENT RX filter and must dynamically switch RX
+filters, when port state changes from Master to Slave and vice versa.
+
+Therefore this feature adds support for DELAY_REQ and SYNC packets
+RX filters. If the interface doesn’t support the EVENT RX filter
+(getting info about it through ethtool) then RX filters will dynamically
+switch between SYNC and DELAY_REQ when port state changes.
+
+Upstream: https://sourceforge.net/p/linuxptp/mailman/message/51783618/
+
+Patch was denied by upstream, because the Rx filters are applied globally
+at the device level, but the PTP operates at the application level, and Rx filter are
+shared between applications.  So that one application cannot simply change
+the shared global settings at run time.
+
+But this patch is required for Arasan GEMAC Ethernet controller, since it cannot timestamp
+both SYNC and DELAY_REQ messages simultaneously. So without the patch it won't be able
+to switch between Master and Slave roles. However, with this patch it will be impossible
+to use ptp virtual-clocks, because it requires to timestamp both SYNC and DELAY_REQ messages.
+
+Signed-off-by: Ilya Orazov <ilordash02@gmail.com>
+---
+ interface.c         |  13 ++++++
+ interface.h         |   8 ++++
+ port.c              |  10 +++++
+ raw.c               |  17 +++++++-
+ sk.c                | 103 +++++++++++++++++++++++++++++++++-----------
+ sk.h                |  19 +++++++-
+ transport.c         |   7 +++
+ transport.h         |   5 +++
+ transport_private.h |   3 ++
+ udp.c               |  18 +++++++-
+ udp6.c              |  18 +++++++-
+ 11 files changed, 193 insertions(+), 28 deletions(-)
+
+diff --git a/interface.c b/interface.c
+index 65bdff0..b9696df 100644
+--- a/interface.c
++++ b/interface.c
+@@ -5,8 +5,13 @@
+  * @note SPDX-License-Identifier: GPL-2.0+
+  */
+ #include <stdlib.h>
++#include <linux/net_tstamp.h>
+ #include "interface.h"
+ 
++#define HWTSTAMP_FILTER_PTP_V2_L2_L4_EVENT                                     \
++	((1 << HWTSTAMP_FILTER_PTP_V2_EVENT) | (1 << HWTSTAMP_FILTER_PTP_V2_L2_EVENT) |      \
++	 (1 << HWTSTAMP_FILTER_PTP_V2_L4_EVENT))
++
+ struct interface {
+ 	STAILQ_ENTRY(interface) list;
+ 	char name[MAX_IFNAME_SIZE + 1];
+@@ -76,3 +81,11 @@ bool interface_tsmodes_supported(struct interface *iface, int modes)
+ 	}
+ 	return false;
+ }
++
++bool interface_check_rxfilters_event(struct interface *iface)
++{
++	if ((iface->ts_info.rx_filters & HWTSTAMP_FILTER_PTP_V2_L2_L4_EVENT) > 0) {
++		return true;
++	}
++	return false;
++}
+diff --git a/interface.h b/interface.h
+index 8bf2727..37ce7a9 100644
+--- a/interface.h
++++ b/interface.h
+@@ -91,4 +91,12 @@ bool interface_tsinfo_valid(struct interface *iface);
+  */
+ bool interface_tsmodes_supported(struct interface *iface, int modes);
+ 
++/**
++ * Tests whether an interface supports all events (HWTSTAMP_FILTER_PTP_V2_EVENT,
++ * HWTSTAMP_FILTER_PTP_V2_L2_EVENT, HWTSTAMP_FILTER_PTP_V2_L4_EVENT).
++ * @param iface  The interface of interest.
++ * @return       True if all events are supported, false otherwise.
++ */
++bool interface_check_rxfilters_event(struct interface *iface);
++
+ #endif
+diff --git a/port.c b/port.c
+index fa49663..0291e94 100644
+--- a/port.c
++++ b/port.c
+@@ -3210,6 +3210,16 @@ int port_state_update(struct port *p, enum fsm_event event, int mdiff)
+ 	}
+ 
+ 	if (next != p->state) {
++		pr_debug("port state update prev %d next %d", p->state, next);
++
++		if ((next == PS_MASTER) || (next == PS_GRAND_MASTER) ||
++		    (next == PS_UNCALIBRATED)) {
++			bool is_state_master = (next == PS_MASTER) ||
++					       (next == PS_GRAND_MASTER);
++			transport_update_rx_filter(p->trp, p->iface, &p->fda,
++						   p->timestamping,
++						   is_state_master);
++		}
+ 		port_show_transition(p, next, event);
+ 		p->state = next;
+ 		port_notify_event(p, NOTIFY_PORT_STATE);
+diff --git a/raw.c b/raw.c
+index 0bd15b0..f4cf54e 100644
+--- a/raw.c
++++ b/raw.c
+@@ -243,7 +243,8 @@ static int raw_open(struct transport *t, struct interface *iface,
+ 	if (gfd < 0)
+ 		goto no_general;
+ 
+-	if (sk_timestamping_init(efd, name, ts_type, TRANS_IEEE_802_3))
++	if (sk_timestamping_init(efd, name, ts_type, TRANS_IEEE_802_3,
++				 interface_check_rxfilters_event(iface)))
+ 		goto no_timestamping;
+ 
+ 	if (sk_general_init(gfd))
+@@ -262,6 +263,19 @@ no_mac:
+ 	return -1;
+ }
+ 
++static int raw_update_rx_filter(struct interface *iface, struct fdarray *fda,
++				enum timestamp_type ts_type, bool is_master)
++{
++	int err;
++	const char *name;
++
++	name = interface_label(iface);
++	err = sk_ts_update_rx_filter(fda->fd[FD_EVENT], name, ts_type,
++				     TRANS_IEEE_802_3, is_master,
++				     interface_check_rxfilters_event(iface));
++	return err;
++}
++
+ static int raw_recv(struct transport *t, int fd, void *buf, int buflen,
+ 		    struct address *addr, struct hw_timestamp *hwts)
+ {
+@@ -372,6 +386,7 @@ struct transport *raw_transport_create(void)
+ 		return NULL;
+ 	raw->t.close   = raw_close;
+ 	raw->t.open    = raw_open;
++	raw->t.update_rx_filter = raw_update_rx_filter;
+ 	raw->t.recv    = raw_recv;
+ 	raw->t.send    = raw_send;
+ 	raw->t.release = raw_release;
+diff --git a/sk.c b/sk.c
+index c9ef4d2..db82798 100644
+--- a/sk.c
++++ b/sk.c
+@@ -41,6 +41,7 @@
+ 
+ int sk_tx_timeout = 1;
+ int sk_check_fupsync;
++int sk_tx_type = HWTSTAMP_TX_ON;
+ enum hwts_filter_mode sk_hwts_filter_mode = HWTS_FILTER_NORMAL;
+ 
+ /* private methods */
+@@ -56,8 +57,8 @@ static void init_ifreq(struct ifreq *ifreq, struct hwtstamp_config *cfg,
+ 	ifreq->ifr_data = (void *) cfg;
+ }
+ 
+-static int hwts_init(int fd, const char *device, int rx_filter,
+-	int rx_filter2, int tx_type)
++static int hwts_set(int fd, const char *device, int rx_filter, int rx_filter2,
++		    int tx_type)
+ {
+ 	struct ifreq ifreq;
+ 	struct hwtstamp_config cfg;
+@@ -446,10 +447,72 @@ int sk_set_priority(int fd, int family, uint8_t dscp)
+ 	return 0;
+ }
+ 
++int sk_ts_get_rx_filter(enum timestamp_type type, enum transport_type transport,
++			bool is_master, bool filter_event_supported,
++			int *filter1, int *filter2)
++{
++	*filter1 = 0;
++	*filter2 = 0;
++
++	if (type == TS_SOFTWARE)
++		return 0;
++
++	if (filter_event_supported) {
++		*filter1 = HWTSTAMP_FILTER_PTP_V2_EVENT;
++	} else {
++		*filter1 = (is_master) ? HWTSTAMP_FILTER_PTP_V2_DELAY_REQ :
++					 HWTSTAMP_FILTER_PTP_V2_SYNC;
++	}
++
++	switch (transport) {
++	case TRANS_UDP_IPV4:
++	case TRANS_UDP_IPV6:
++		if (filter_event_supported)
++			*filter2 = HWTSTAMP_FILTER_PTP_V2_L4_EVENT;
++		else
++			*filter2 = (is_master) ?
++					   HWTSTAMP_FILTER_PTP_V2_L4_DELAY_REQ :
++					   HWTSTAMP_FILTER_PTP_V2_L4_SYNC;
++		break;
++	case TRANS_IEEE_802_3:
++		if (filter_event_supported)
++			*filter2 = HWTSTAMP_FILTER_PTP_V2_L2_EVENT;
++		else
++			*filter2 = (is_master) ?
++					   HWTSTAMP_FILTER_PTP_V2_L2_DELAY_REQ :
++					   HWTSTAMP_FILTER_PTP_V2_L2_SYNC;
++		break;
++	case TRANS_DEVICENET:
++	case TRANS_CONTROLNET:
++	case TRANS_PROFINET:
++	case TRANS_UDS:
++		return -1;
++	}
++
++	return 0;
++}
++
++int sk_ts_update_rx_filter(int fd, const char *device, enum timestamp_type type,
++			   enum transport_type transport, bool is_master,
++			   bool filter_event_supported)
++{
++	int err, filter1, filter2;
++
++	err = sk_ts_get_rx_filter(type, transport, is_master,
++				  filter_event_supported, &filter1, &filter2);
++	if (err)
++		return err;
++
++	pr_debug("update rx filter1 %d, filter2 %d", filter1, filter2);
++
++	err = hwts_set(fd, device, filter1, filter2, sk_tx_type);
++	return err;
++}
++
+ int sk_timestamping_init(int fd, const char *device, enum timestamp_type type,
+-			 enum transport_type transport)
++			 enum transport_type transport, bool filter_event_supported)
+ {
+-	int err, filter1, filter2 = 0, flags, tx_type = HWTSTAMP_TX_ON;
++	int err, filter1, filter2 = 0, flags;
+ 
+ 	switch (type) {
+ 	case TS_SOFTWARE:
+@@ -474,37 +537,29 @@ int sk_timestamping_init(int fd, const char *device, enum timestamp_type type,
+ 	}
+ 
+ 	if (type != TS_SOFTWARE) {
+-		filter1 = HWTSTAMP_FILTER_PTP_V2_EVENT;
+ 		switch (type) {
+ 		case TS_SOFTWARE:
+-			tx_type = HWTSTAMP_TX_OFF;
++			sk_tx_type = HWTSTAMP_TX_OFF;
+ 			break;
+ 		case TS_HARDWARE:
+ 		case TS_LEGACY_HW:
+-			tx_type = HWTSTAMP_TX_ON;
++			sk_tx_type = HWTSTAMP_TX_ON;
+ 			break;
+ 		case TS_ONESTEP:
+-			tx_type = HWTSTAMP_TX_ONESTEP_SYNC;
++			sk_tx_type = HWTSTAMP_TX_ONESTEP_SYNC;
+ 			break;
+ 		case TS_P2P1STEP:
+-			tx_type = HWTSTAMP_TX_ONESTEP_P2P;
+-			break;
+-		}
+-		switch (transport) {
+-		case TRANS_UDP_IPV4:
+-		case TRANS_UDP_IPV6:
+-			filter2 = HWTSTAMP_FILTER_PTP_V2_L4_EVENT;
+-			break;
+-		case TRANS_IEEE_802_3:
+-			filter2 = HWTSTAMP_FILTER_PTP_V2_L2_EVENT;
++			sk_tx_type = HWTSTAMP_TX_ONESTEP_P2P;
+ 			break;
+-		case TRANS_DEVICENET:
+-		case TRANS_CONTROLNET:
+-		case TRANS_PROFINET:
+-		case TRANS_UDS:
+-			return -1;
+ 		}
+-		err = hwts_init(fd, device, filter1, filter2, tx_type);
++
++		err = sk_ts_get_rx_filter(type, transport, false,
++					  filter_event_supported, &filter1,
++					  &filter2);
++		if (err)
++			return err;
++
++		err = hwts_set(fd, device, filter1, filter2, sk_tx_type);
+ 		if (err)
+ 			return err;
+ 	}
+diff --git a/sk.h b/sk.h
+index 04d26ee..85ff744 100644
+--- a/sk.h
++++ b/sk.h
+@@ -118,16 +118,33 @@ int sk_receive(int fd, void *buf, int buflen,
+  */
+ int sk_set_priority(int fd, int family, uint8_t dscp);
+ 
++/**
++ * If interface doesn't support HWTSTAMP_FILTER_PTP_V2_L2_L4_EVENT RX filters,
++ * and support only HWTSTAMP_FILTER_PTP_V2_L2_L4_SYNC and
++ * HWTSTAMP_FILTER_PTP_V2_L2_L4_DELAY_REQ update it's RX filters
++ * when port state is changed.
++ * @param fd          An open socket.
++ * @param device      The name of the network interface to configure.
++ * @param type        The requested flavor of time stamping.
++ * @param transport   The type of transport used.
++ * @param is_master   Is current port state is Master.
++ * @return            Zero on success, non-zero otherwise.
++ */
++int sk_ts_update_rx_filter(int fd, const char *device, enum timestamp_type type,
++			   enum transport_type transport, bool is_master,
++			   bool filter_all_supported);
++
+ /**
+  * Enable time stamping on a given network interface.
+  * @param fd          An open socket.
+  * @param device      The name of the network interface to configure.
+  * @param type        The requested flavor of time stamping.
+  * @param transport   The type of transport used.
++ * @param filter_event_supported   Flag that interface supports all events
+  * @return            Zero on success, non-zero otherwise.
+  */
+ int sk_timestamping_init(int fd, const char *device, enum timestamp_type type,
+-			 enum transport_type transport);
++			 enum transport_type transport, bool filter_event_supported);
+ 
+ /**
+  * Limits the time that RECVMSG(2) will poll while waiting for the tx timestamp
+diff --git a/transport.c b/transport.c
+index 9366fbf..c27137b 100644
+--- a/transport.c
++++ b/transport.c
+@@ -37,6 +37,13 @@ int transport_open(struct transport *t, struct interface *iface,
+ 	return t->open(t, iface, fda, tt);
+ }
+ 
++int transport_update_rx_filter(struct transport *t, struct interface *iface,
++			       struct fdarray *fda, enum timestamp_type tt,
++			       bool is_master)
++{
++	return t->update_rx_filter(iface, fda, tt, is_master);
++}
++
+ int transport_recv(struct transport *t, int fd, struct ptp_message *msg)
+ {
+ 	return t->recv(t, fd, msg, sizeof(msg->data), &msg->address, &msg->hwts);
+diff --git a/transport.h b/transport.h
+index 7a7f87b..37ef0f1 100644
+--- a/transport.h
++++ b/transport.h
+@@ -22,6 +22,7 @@
+ 
+ #include <time.h>
+ #include <inttypes.h>
++#include <stdbool.h>
+ 
+ #include "fd.h"
+ #include "msg.h"
+@@ -60,6 +61,10 @@ int transport_close(struct transport *t, struct fdarray *fda);
+ int transport_open(struct transport *t, struct interface *iface,
+ 		   struct fdarray *fda, enum timestamp_type tt);
+ 
++int transport_update_rx_filter(struct transport *t, struct interface *iface,
++			       struct fdarray *fda, enum timestamp_type tt,
++			       bool is_master);
++
+ int transport_recv(struct transport *t, int fd, struct ptp_message *msg);
+ 
+ /**
+diff --git a/transport_private.h b/transport_private.h
+index ec28e47..61d277f 100644
+--- a/transport_private.h
++++ b/transport_private.h
+@@ -35,6 +35,9 @@ struct transport {
+ 	int (*open)(struct transport *t, struct interface *iface,
+ 		    struct fdarray *fda, enum timestamp_type tt);
+ 
++	int (*update_rx_filter)(struct interface *iface, struct fdarray *fda,
++				enum timestamp_type ts_type, bool is_master);
++
+ 	int (*recv)(struct transport *t, int fd, void *buf, int buflen,
+ 		    struct address *addr, struct hw_timestamp *hwts);
+ 
+diff --git a/udp.c b/udp.c
+index 826bd12..4ac939c 100644
+--- a/udp.c
++++ b/udp.c
+@@ -179,7 +179,8 @@ static int udp_open(struct transport *t, struct interface *iface,
+ 	if (gfd < 0)
+ 		goto no_general;
+ 
+-	if (sk_timestamping_init(efd, interface_label(iface), ts_type, TRANS_UDP_IPV4))
++	if (sk_timestamping_init(efd, interface_label(iface), ts_type, TRANS_UDP_IPV4,
++				 interface_check_rxfilters_event(iface)))
+ 		goto no_timestamping;
+ 
+ 	if (sk_general_init(gfd))
+@@ -207,6 +208,20 @@ no_event:
+ 	return -1;
+ }
+ 
++static int udp_update_rx_filter(struct interface *iface, struct fdarray *fda,
++				enum timestamp_type ts_type, bool is_master)
++{
++	int err;
++	const char *name;
++
++	name = interface_label(iface);
++	err = sk_ts_update_rx_filter(fda->fd[FD_EVENT], name, ts_type,
++				     TRANS_UDP_IPV4, is_master,
++				     interface_check_rxfilters_event(iface));
++
++	return err;
++}
++
+ static int udp_recv(struct transport *t, int fd, void *buf, int buflen,
+ 		    struct address *addr, struct hw_timestamp *hwts)
+ {
+@@ -301,6 +316,7 @@ struct transport *udp_transport_create(void)
+ 		return NULL;
+ 	udp->t.close = udp_close;
+ 	udp->t.open  = udp_open;
++	udp->t.update_rx_filter = udp_update_rx_filter;
+ 	udp->t.recv  = udp_recv;
+ 	udp->t.send  = udp_send;
+ 	udp->t.release = udp_release;
+diff --git a/udp6.c b/udp6.c
+index ba5482e..71df402 100644
+--- a/udp6.c
++++ b/udp6.c
+@@ -196,7 +196,8 @@ static int udp6_open(struct transport *t, struct interface *iface,
+ 	if (gfd < 0)
+ 		goto no_general;
+ 
+-	if (sk_timestamping_init(efd, interface_label(iface), ts_type, TRANS_UDP_IPV6))
++	if (sk_timestamping_init(efd, interface_label(iface), ts_type, TRANS_UDP_IPV6,
++				 interface_check_rxfilters_event(iface)))
+ 		goto no_timestamping;
+ 
+ 	if (sk_general_init(gfd))
+@@ -224,6 +225,20 @@ no_event:
+ 	return -1;
+ }
+ 
++static int udp6_update_rx_filter(struct interface *iface, struct fdarray *fda,
++				 enum timestamp_type ts_type, bool is_master)
++{
++	int err;
++	const char *name;
++
++	name = interface_label(iface);
++	err = sk_ts_update_rx_filter(fda->fd[FD_EVENT], name, ts_type,
++				     TRANS_UDP_IPV6, is_master,
++				     interface_check_rxfilters_event(iface));
++
++	return err;
++}
++
+ static int udp6_recv(struct transport *t, int fd, void *buf, int buflen,
+ 		     struct address *addr, struct hw_timestamp *hwts)
+ {
+@@ -317,6 +332,7 @@ struct transport *udp6_transport_create(void)
+ 		return NULL;
+ 	udp6->t.close   = udp6_close;
+ 	udp6->t.open    = udp6_open;
++	udp6->t.update_rx_filter = udp6_update_rx_filter;
+ 	udp6->t.recv    = udp6_recv;
+ 	udp6->t.send    = udp6_send;
+ 	udp6->t.release = udp6_release;
+-- 
+2.39.3
+
+
+From 545499e1e594f819345a363c13df14547fdc06d8 Mon Sep 17 00:00:00 2001
+From: Ilya Orazov <ilordash02@gmail.com>
+Date: Fri, 17 May 2024 18:04:31 +0300
+Subject: [PATCH] port: remove print "miss DELAY_REQ tstamp" in slave
+
+When in Slave mode some hardware cannot timestamp DELAY_REQ msgs, but
+ptp4l still waiting for timestamp for them. Since hardware cannot
+timestamp, ptp4l prints error messages. For this cases these messages
+do not make sense, so don't print them.
+
+Signed-off-by: Ilya Orazov <ilordash02@gmail.com>
+---
+ port.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/port.c b/port.c
+index 0291e94..3a41d23 100644
+--- a/port.c
++++ b/port.c
+@@ -2707,8 +2707,11 @@ static enum fsm_event bc_event(struct port *p, int fd_index)
+ 	}
+ 	if (msg_sots_missing(msg) &&
+ 	    !(p->timestamping == TS_P2P1STEP && msg_type(msg) == PDELAY_REQ)) {
+-		pr_err("port %hu: received %s without timestamp",
+-		       portnum(p), msg_type_string(msg_type(msg)));
++		if (((p->state == PS_MASTER) ||
++		     (p->state == PS_GRAND_MASTER)) &&
++		    (msg_type(msg) == PDELAY_REQ))
++			pr_err("port %hu: received %s without timestamp",
++			       portnum(p), msg_type_string(msg_type(msg)));
+ 		msg_put(msg);
+ 		return EV_NONE;
+ 	}
+-- 
+2.39.3
+
