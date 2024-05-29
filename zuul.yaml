@@ -1,0 +1,4 @@
+- project:
+    check:
+      jobs:
+        - mcom02-buildroot-build
