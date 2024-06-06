@@ -1,0 +1,32 @@
+The original setup.py cannot find the path to the installed pybind11.
+This patch to fix this.
+Added paths to sys.path list.
+
+When updating the buildroot, the patch should be cancel.
+The patch is strictly tied to Python 3.8!
+
+Signed-off-by: Kirill Ponomarev <kponomarev@elvees.com>
+--- python-scipy-1.8.1/_setup.py	2024-06-11 17:17:59.969054475 +0300
++++ python-scipy-1.8.1/setup.py	2024-06-11 17:15:42.297166806 +0300
+@@ -495,12 +495,20 @@
+             pkgname = 'numpy'
+             import numpy
+             pkgname = 'pybind11'
++            import sys
++            pybind_path1 = sys.path[3]+"/../../../build"
++            pybind_path2 = sys.path[3]+"/../../../target/usr/lib/python3.8/site-packages/"
++            sys.path.append(pybind_path1)
++            sys.path.append(pybind_path2)
+             import pybind11
++
+         except ImportError as exc:  # We do not have our build deps installed
+             print(textwrap.dedent(
+                     """Error: '%s' must be installed before running the build.
++                    Path list:
++                    '%s'
+                     """
+-                    % (pkgname,)))
++                    % (pkgname,sys.path,)))
+             sys.exit(1)
+ 
+     return run_build
