@@ -1,0 +1,49 @@
+From 5c81de98fcb533c0889ed6c6f6cd8640bb626360 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 19 Apr 2024 19:20:40 +0200
+Subject: [PATCH] timedate: handle gracefully if RTC lost time because of power
+ loss
+
+Apparently some RTC drivers return EINVAL in that case when we try to
+read it. Handle that reasonably gracefully.
+
+Fixes: #31854
+Upstream: https://github.com/systemd/systemd/commit/5c81de98fcb533c0889ed6c6f6cd8640bb626360
+Signed-off-by: Igor Savinkov <isavinkov@elvees.com>
+---
+ src/shared/clock-util.c  | 7 ++++---
+ src/timedate/timedated.c | 2 ++
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/src/shared/clock-util.c b/src/shared/clock-util.c
+index b0cbe30072023..37d02325b749e 100644
+--- a/src/shared/clock-util.c
++++ b/src/shared/clock-util.c
+@@ -27,10 +27,11 @@ int clock_get_hwclock(struct tm *tm) {
+         if (fd < 0)
+                 return -errno;
+ 
+-        /* This leaves the timezone fields of struct tm
+-         * uninitialized! */
++        /* This leaves the timezone fields of struct tm uninitialized! */
+         if (ioctl(fd, RTC_RD_TIME, tm) < 0)
+-                return -errno;
++                /* Some drivers return -EINVAL in case the time could not be kept, i.e. power loss
++                 * happened. Let's turn that into a clearly recognizable error */
++                return errno == EINVAL ? -ENODATA : -errno;
+ 
+         /* We don't know daylight saving, so we reset this in order not
+          * to confuse mktime(). */
+diff --git a/src/timedate/timedated.c b/src/timedate/timedated.c
+index 4840ba47b1c1b..e3b4367ec0536 100644
+--- a/src/timedate/timedated.c
++++ b/src/timedate/timedated.c
+@@ -596,6 +596,8 @@ static int property_get_rtc_time(
+                 log_warning("/dev/rtc is busy. Is somebody keeping it open continuously? That's not a good idea... Returning a bogus RTC timestamp.");
+         else if (r == -ENOENT)
+                 log_debug("/dev/rtc not found.");
++        else if (r == -ENODATA)
++                log_debug("/dev/rtc has no valid time, power loss probably occurred?");
+         else if (r < 0)
+                 return sd_bus_error_set_errnof(error, r, "Failed to read RTC: %m");
+         else
