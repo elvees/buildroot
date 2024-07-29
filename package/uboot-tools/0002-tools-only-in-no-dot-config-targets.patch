@@ -17,25 +17,28 @@ issues.
 Based on Debian patch from u-boot-tools:
 http://ftp.de.debian.org/debian/pool/main/u/u-boot/u-boot_2014.10+dfsg1-2.1.debian.tar.xz
 
+Upstream: N/A
+
 Signed-off-by: Jörg Krause <joerg.krause@embedded.rocks>
 [fabio: adapt it to 2016.09]
 Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
 [Fabrice: adapt it to 2021.04]
 Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
 ---
- Makefile | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Makefile | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index af1408222d..84aa616de5 100644
+index 1c754ceb59..8847cd9a63 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -522,7 +522,7 @@ env_h := include/generated/environment.h
+@@ -533,7 +533,8 @@ env_h := include/generated/environment.h
  no-dot-config-targets := clean clobber mrproper distclean \
  			 help %docs check% coccicheck \
  			 ubootversion backup tests check pcheck qcheck tcheck \
--			 pylint pylint_err
-+			 pylint pylint_err tools-only
+-			 pylint pylint_err _pip pip pip_test pip_release
++			 pylint pylint_err _pip pip pip_test pip_release \
++			 tools-only
  
  config-targets := 0
  mixed-targets  := 0
