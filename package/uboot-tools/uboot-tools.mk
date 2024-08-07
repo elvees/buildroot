@@ -5,7 +5,7 @@
 ################################################################################
 
 UBOOT_TOOLS_VERSION = mcom02
-UBOOT_TOOLS_SITE = https://github.com/elvees/u-boot
+UBOOT_TOOLS_SITE = https://gerrit.elvees.com/bootloader/u-boot
 UBOOT_TOOLS_SITE_METHOD = git
 UBOOT_TOOLS_LICENSE = GPL-2.0+
 UBOOT_TOOLS_LICENSE_FILES = Licenses/gpl-2.0.txt
