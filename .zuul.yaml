@@ -1,0 +1,7 @@
+- project:
+    check:
+      jobs:
+        - mcom03-qt-buildroot-build:
+            files:
+              - .*qt5
+              - .*-sip
