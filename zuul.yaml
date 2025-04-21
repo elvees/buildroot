@@ -1,4 +1,8 @@
 - project:
+    experimental:
+      jobs:
+        - mcom02-buildroot-build-centos9
+        - mcom02-buildroot-build-ubuntu22.04
     check:
       jobs:
         - mcom02-buildroot-build
