@@ -95,6 +95,13 @@ define ALSA_UTILS_INSTALL_INIT_SYSTEMD
 	$(INSTALL) -d -m 0755 $(TARGET_DIR)/usr/lib/systemd/system/alsa-state.service.d
 	printf '[Install]\nWantedBy=multi-user.target\n' \
 		>$(TARGET_DIR)/usr/lib/systemd/system/alsa-state.service.d/buildroot-enable.conf;
+	mkdir -p $(TARGET_DIR)/usr/lib/systemd/system/sound.target.wants
+	rm -f $(TARGET_DIR)/usr/lib/systemd/system/sound.target.wants/alsa-restore.service
+	rm -f $(TARGET_DIR)/usr/lib/systemd/system/sound.target.wants/alsa-state.service
+	ln -s -f ../alsa-restore.service \
+		$(TARGET_DIR)/usr/lib/systemd/system/sound.target.wants/alsa-restore.service
+	ln -s -f ../alsa-state.service \
+		$(TARGET_DIR)/usr/lib/systemd/system/sound.target.wants/alsa-state.service
 endef
 endif
 
