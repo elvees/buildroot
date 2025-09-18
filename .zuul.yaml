@@ -2,7 +2,7 @@
     check: &check-jobs
       jobs:
         - mcom03-linux66-buildroot-build
-        - mcom03-qt-buildroot-build:
+        - mcom03r-linux66-qt-buildroot-build:
             files:
               - .*qt5
               - .*-sip
