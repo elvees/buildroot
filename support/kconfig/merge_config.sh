@@ -22,6 +22,7 @@
 
 clean_up() {
 	rm -f $TMP_FILE
+	rm -f $MERGE_TMP_FILE
 	exit
 }
 trap clean_up HUP INT TERM
@@ -111,8 +112,10 @@ fi
 MERGE_LIST=$*
 SED_CONFIG_EXP1="s/^\(${CONFIG_PREFIX}[a-zA-Z0-9_]*\)=.*/\1/p"
 SED_CONFIG_EXP2="s/^# \(${CONFIG_PREFIX}[a-zA-Z0-9_]*\) is not set$/\1/p"
+SED_CONFIG_EXP3="s/^\(${CONFIG_PREFIX}[a-zA-Z0-9_]*CONFIG_FRAGMENT_FILES\)=.*/\1/p"
 
 TMP_FILE=$(mktemp -t .tmp.config.XXXXXXXXXX)
+MERGE_TMP_FILE=$(mktemp -t .tmp.merge.XXXXXXXXXX)
 
 echo "Using $INITFILE as base"
 cat $INITFILE > $TMP_FILE
@@ -124,12 +127,23 @@ for MERGE_FILE in $MERGE_LIST ; do
 		echo "The merge file '$MERGE_FILE' does not exist.  Exit." >&2
 		exit 1
 	fi
-	CFG_LIST=$(sed -n -e "$SED_CONFIG_EXP1" -e "$SED_CONFIG_EXP2" $MERGE_FILE)
+	cat $MERGE_FILE > $MERGE_TMP_FILE
 
+	FRG_LIST=$(sed -n -e "$SED_CONFIG_EXP3" $MERGE_TMP_FILE)
+	for FRG in $FRG_LIST ; do
+		NEW_VAL=$(sed -n -e "s/^$FRG=\"\(.*\)\"/\1/p" $TMP_FILE)
+		NEW_VAL+=" $(sed -n -e "s/^$FRG=\"\(.*\)\"/\1/p" $MERGE_TMP_FILE)"
+		sed -i "/$FRG[ =]/d" $TMP_FILE
+		sed -i "/$FRG[ =]/d" $MERGE_TMP_FILE
+		echo -e "$FRG=\"$(echo $NEW_VAL | tr ' ' '\n' | awk '!seen[$0]++' | \
+			tr '\n' ' ' | sed 's/\s*$//')\"" >> $TMP_FILE
+	done
+
+	CFG_LIST=$(sed -n -e "$SED_CONFIG_EXP1" -e "$SED_CONFIG_EXP2" $MERGE_TMP_FILE)
 	for CFG in $CFG_LIST ; do
 		grep -q -w $CFG $TMP_FILE || continue
 		PREV_VAL=$(grep -w $CFG $TMP_FILE)
-		NEW_VAL=$(grep -w $CFG $MERGE_FILE)
+		NEW_VAL=$(grep -w $CFG $MERGE_TMP_FILE)
 		if [ "x$PREV_VAL" != "x$NEW_VAL" ] ; then
 			echo Value of $CFG is redefined by fragment $MERGE_FILE:
 			echo Previous  value: $PREV_VAL
@@ -140,7 +154,7 @@ for MERGE_FILE in $MERGE_LIST ; do
 		fi
 		sed -i "/$CFG[ =]/d" $TMP_FILE
 	done
-	cat $MERGE_FILE >> $TMP_FILE
+	cat $MERGE_TMP_FILE >> $TMP_FILE
 done
 
 if [ "$RUNMAKE" = "false" ]; then
