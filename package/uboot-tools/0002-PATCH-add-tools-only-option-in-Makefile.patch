@@ -1,0 +1,30 @@
+From 411164008bb99fb7b2ab2953e00701cac1f2f7ae Mon Sep 17 00:00:00 2001
+From: Maksim Tarelov <mtarelov@elvees.com>
+Date: Wed, 21 Jan 2026 11:37:43 +0300
+Subject: [PATCH] [PATCH] tools-only option in Makefile
+
+* Add "tools-only" to no-dot-config-targets in Makefile
+
+Issue: #MCOM02SW-2400
+Change-Id: I8d4cc6b85afbfd1b983ba29930e160d37bba6358
+Signed-off-by: Maksim Tarelov <mtarelov@elvees.com>
+---
+ Makefile                |  4 ++--
+ 5 files changed, 5 insertions(+), 16 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index d07e0115723..92fe0af891f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -533,7 +533,7 @@ env_h := include/generated/environment.h
+ 
+ no-dot-config-targets := clean clobber mrproper distclean \
+ 			 help %docs check% coccicheck \
+-			 ubootversion backup tests check pcheck qcheck tcheck \
++			 ubootversion backup tests tools-only check tools-only pcheck qcheck tcheck \
+ 			 pylint pylint_err _pip pip pip_test pip_release
+ 
+ config-targets := 0
+-- 
+2.43.0
+
